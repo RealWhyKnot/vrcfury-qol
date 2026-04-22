@@ -1,55 +1,71 @@
-# VRCFury Toggles → Flipbook
+# VRCFury Flipbook Tools
 
-A tiny Unity editor tool that migrates a bunch of independent **VRCFury Toggles** into pages of a single **Flipbook Builder** action on a destination toggle. Useful when you want to collapse many on/off toggles (outfit variants, hair styles, preset configurations…) into one radial slider.
+A small set of Unity editor tools for working with **VRCFury Flipbook Builder** toggles. Useful when you've got a bunch of independent VRCFury toggles (outfit pieces, hair styles, preset configurations…) and want to collapse them into a single radial slider — or tweak an existing flipbook without clicking through the Inspector.
 
-## What it does
+All tools live under **Tools → VRCFury →** in the main Unity menu.
 
-Given a selection in your Hierarchy:
+## Tools
 
-- Finds exactly **one** VRCFury Toggle whose state contains a Flipbook Builder action — this is the **destination**.
-- Takes every **other** VRCFury Toggle in the selected subtree (that does not already have a Flipbook Builder) and appends its entire action list as a new page in the destination's flipbook.
-- Deletes the source VRCFury components (leaves the GameObjects alone in case they hold other things).
-- All done in a single Undo group — `Ctrl+Z` reverts the whole migration.
+### Migrate Toggles Into Flipbook
 
-Pages are appended in hierarchy / sibling order. Existing pages on the destination flipbook are preserved; migrated sources are added after.
+`VrcfMigrateTogglesToFlipbook.cs`
+
+Takes every non-flipbook VRCFury Toggle in the selected subtree and folds it into a destination flipbook toggle as a new page. Source VRCFury components are deleted afterward.
+
+**Use when:** you have many independent toggles and want to turn them into a single radial selector.
+
+**Usage:**
+
+1. Select the GameObject holding your destination flipbook toggle (or an ancestor).
+2. **Tools → VRCFury → Migrate Toggles Into Flipbook**.
+3. Review the confirmation dialog (destination + ordered list of sources) and click **Migrate**.
+4. Save the scene. `Ctrl+Z` reverts the whole migration.
+
+**Matching rules:**
+
+- **Destination:** exactly one VRCFury Toggle in the subtree whose state contains a `FlipBookBuilderAction`. Zero or multiple → the tool aborts with a clear dialog.
+- **Sources:** every other VRCFury Toggle in the same subtree whose state does not already have a `FlipBookBuilderAction`.
+- **Order:** hierarchy / sibling order.
+- **Existing pages:** preserved. Migrated sources are appended after.
+- **Dropped settings:** source toggles' menu path, `saved`, `defaultOn`, exclusive tags, icon, transitions, etc. are not carried over — a flipbook page is just a set of actions.
+
+### Duplicate Flipbook Page
+
+`VrcfDuplicateFlipbookPage.cs`
+
+Opens a small window that lists every page of the selected flipbook and gives each row a **Duplicate to end** button. Clicking one deep-copies that page and appends the copy to the end of the flipbook.
+
+**Use when:** you want to clone page #7 to page #8 as a starting point, without rebuilding the actions by hand.
+
+**Usage:**
+
+1. Select the GameObject holding your flipbook toggle (or an ancestor).
+2. **Tools → VRCFury → Duplicate Flipbook Page…**.
+3. In the window, click **Duplicate to end** on any row.
+4. Save the scene. `Ctrl+Z` reverts.
+
+**Deep copy guarantee:** the new page is independent of the source — editing page #8's actions after duplication will not affect page #7. Each action is cloned via `JsonUtility` round-trip, which preserves Unity `Object` references (GameObjects, Renderers, animation clips) by instance id while creating fresh instances of the value-type fields.
 
 ## Installation
 
-1. Copy `VrcfMigrateTogglesToFlipbook.cs` into any `Assets/Editor/` folder in your Unity project. (Create the folder if you don't have one — Unity compiles anything under a folder named `Editor` as an editor-only assembly.)
+1. Copy the `.cs` files into any `Assets/Editor/` folder in your Unity project. (Create the folder if you don't have one — Unity compiles anything under a folder named `Editor` as an editor-only assembly.)
 2. Let Unity compile. Done.
 
 No asmdef, no dependencies beyond VRCFury itself.
 
-## Usage
-
-1. In the Hierarchy, select the GameObject that holds your destination flipbook toggle, or any ancestor of it. (The script scans the selection plus all descendants.)
-2. Top menu: **Tools → VRCFury → Migrate Toggles Into Flipbook**.
-3. A confirmation dialog shows which flipbook was identified and lists the source toggles in the order they'll be added. Click **Migrate** to proceed.
-4. Save the scene.
-
-If anything looks wrong, **Ctrl+Z** reverts everything.
-
-## Matching rules
-
-- **Destination:** a VRCFury Toggle whose `state.actions` contains a `FlipBookBuilderAction`. Typically this is a slider (radial) toggle you've set up with an empty Flipbook Builder.
-- **Source:** any other VRCFury Toggle in the same subtree whose state does *not* contain a Flipbook Builder action.
-- **Conflict:** if zero or multiple destinations are found, the tool aborts with a clear dialog listing what it saw. Narrow your selection and try again.
-
-Source-toggle settings other than the action list (menu path, `saved`, `defaultOn`, exclusive tags, icon, transitions, etc.) are intentionally dropped — a flipbook page only needs the actions.
-
 ## How it works under the hood
 
-The VRCFury runtime types (`VF.Model.VRCFury`, `VF.Model.Feature.Toggle`, `VF.Model.StateAction.FlipBookBuilderAction`, etc.) are marked `internal`, so an editor script in a user's `Assets/Editor/` folder can't reference them directly. The script uses reflection to locate the types and their fields by name. This means:
+The VRCFury runtime types (`VF.Model.VRCFury`, `VF.Model.Feature.Toggle`, `VF.Model.StateAction.FlipBookBuilderAction`, etc.) are marked `internal`, so an editor script in `Assets/Editor/` can't reference them directly. The scripts use reflection to locate the types and their fields by name. That means:
 
 - No asmdef changes or `InternalsVisibleTo` required.
-- The script keeps working across VRCFury upgrades as long as the field names (`content`, `state`, `actions`, `pages`, `name`, `slider`) stay stable.
-- If VRCFury renames those fields in a future version, the script shows a clean error dialog rather than a mysterious crash.
+- The scripts keep working across VRCFury upgrades as long as the field names (`content`, `state`, `actions`, `pages`, `name`) stay stable.
+- If VRCFury renames those fields in a future version, the scripts show a clean error dialog rather than crashing.
 
 Tested against VRCFury `1.1303.x`.
 
 ## Not a replacement for review
 
-This tool does real, destructive changes to your scene (deleting source VRCFury components). Always:
+These tools do real, destructive changes to your scene (deleting source VRCFury components in the migrator). Always:
 
 1. Commit your project to version control first, or duplicate the scene/avatar.
 2. Try it on one small group before pointing it at anything large.
