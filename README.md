@@ -29,6 +29,18 @@ Right-click on any page inside a Flipbook Builder (the row with the `Page #N` he
 
 For discoverability, a small **Duplicate → End** button is injected next to every `Page #N` label. Clicking it does the same thing as the right-click version. This is best-effort UI injection: if a future VRCFury version changes the page layout, the button silently disappears and the right-click menu still works.
 
+### Hot reload + compile-error log
+
+`VrcfQolHotReload.cs` watches `Assets/**/*.cs` via a `FileSystemWatcher` and calls `AssetDatabase.Refresh()` when it sees a change, so Unity picks up edits even when its window isn't focused. It also subscribes to `CompilationPipeline.assemblyCompilationFinished` and appends a one-line summary per assembly plus one line per error to:
+
+```
+<ProjectRoot>/Logs/VrcfQolHotReload.log
+```
+
+The log rolls over at 512 KB (old copy is kept as `VrcfQolHotReload.log.old`). Tail it from a terminal to watch compiles happen in real time; errors come out formatted as `[Error] <file>(<line>,<col>): <message>` so they're easy to grep.
+
+Bootstrap: after the first time you install or update these scripts, focus Unity once so it compiles them. From then on, saving a script externally (for example via an editor on another monitor) will trigger a refresh + compile without tabbing into Unity.
+
 ## Installation
 
 Copy the `Editor/` folder into your Unity project, under `Assets/`. Any path works as long as the folder is inside `Assets/` and is called `Editor` (or has an `Editor` folder as an ancestor) — Unity compiles it as an editor-only assembly.
@@ -40,6 +52,7 @@ Assets/
   Editor/
     VrcfQol.cs
     VrcfQolInspectorOverlay.cs
+    VrcfQolHotReload.cs
     Tools/
       AutoGlobalParameterTool.cs
       DuplicateFlipbookPageTool.cs

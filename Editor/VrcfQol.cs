@@ -3,11 +3,11 @@
 //
 // This file provides three things to tool authors:
 //
-//   1. VrcfQol.Reflection   – lazily-resolved reflection handles for VRCFury's
+//   1. VrcfQol.Reflection   - lazily-resolved reflection handles for VRCFury's
 //                             internal types (VRCFury component, Toggle feature,
 //                             State, FlipBookBuilderAction, FlipBookPage).
 //
-//   2. Registration API     – small, typed helpers so a new tool is usually one
+//   2. Registration API     - small, typed helpers so a new tool is usually one
 //                             file with one [InitializeOnLoad] registration call:
 //                                RegisterPropertyTool         (generic, by SerializedProperty)
 //                                RegisterFlipbookPageTool     (page right-click)
@@ -16,13 +16,13 @@
 //                                RegisterToggleTool           (VRCFury Toggle right-click)
 //                                RegisterActionTool           (generic action right-click)
 //
-//   3. Helpers              – page clipboard for copy/paste, path formatting,
+//   3. Helpers              - page clipboard for copy/paste, path formatting,
 //                             flipbook resolution from a SerializedProperty,
 //                             deep-clone of a FlipBookPage.
 //
 // The inspector overlay (VrcfQolInspectorOverlay.cs) reads from the page-button
 // registry to render inline buttons next to each page row. Nothing else touches
-// the inspector's visual tree directly — tools just register and let the overlay
+// the inspector's visual tree directly - tools just register and let the overlay
 // handle placement.
 
 using System;
@@ -54,11 +54,6 @@ namespace UmeVrcfQol {
         private static readonly List<PropEntry> _propEntries = new List<PropEntry>();
         private static bool _contextHookInstalled;
 
-        /// <summary>
-        /// Register a context-menu tool that fires when the user right-clicks a
-        /// SerializedProperty matching <paramref name="match"/>.
-        /// Label supports slash-separated submenus ("VRCF QoL/Pages/Duplicate").
-        /// </summary>
         public static void RegisterPropertyTool(
             string label,
             PropertyMatcher match,
@@ -130,10 +125,6 @@ namespace UmeVrcfQol {
             return m.Success && int.TryParse(m.Groups[1].Value, out var i) ? i : -1;
         }
 
-        /// <summary>
-        /// Register a right-click menu item that appears on a FlipBookPage property.
-        /// The action receives the parsed FlipbookContext (component, flipbook, pages, index).
-        /// </summary>
         public static void RegisterFlipbookPageTool(
             string label,
             Action<FlipbookContext> action,
@@ -184,7 +175,6 @@ namespace UmeVrcfQol {
         // ---- VRCFury Toggle component (right-click anywhere on the component) ----
 
         public static bool IsToggleContentProperty(SerializedProperty prop) {
-            // `content` is a SerializeReference on VRCFury pointing at a Toggle (or other feature).
             if (prop == null || prop.propertyType != SerializedPropertyType.ManagedReference) return false;
             if (!Reflection.TryEnsure(out _)) return false;
             var t = prop.managedReferenceFullTypename;
@@ -221,11 +211,6 @@ namespace UmeVrcfQol {
             return t.EndsWith(" " + actionType.FullName);
         }
 
-        /// <summary>
-        /// Register a right-click tool for a VRCFury action type identified by full name,
-        /// e.g. "VF.Model.StateAction.ObjectToggleAction". Reflection-based so the tool
-        /// doesn't need to reference the internal type.
-        /// </summary>
         public static void RegisterActionTool(
             string vrcfActionFullName,
             string label,
@@ -252,7 +237,7 @@ namespace UmeVrcfQol {
             public string Text;
             public string Tooltip;
             public Action<FlipbookContext> OnClick;
-            public Func<FlipbookContext, bool> Visible; // optional, hides when false
+            public Func<FlipbookContext, bool> Visible;
             public int Order;
         }
 
@@ -260,11 +245,6 @@ namespace UmeVrcfQol {
 
         internal static IReadOnlyList<InlineButtonSpec> InlinePageButtons => _inlinePageButtons;
 
-        /// <summary>
-        /// Register a visible button that appears next to every "Page #N" label
-        /// in a VRCFury Flipbook Builder's inspector UI. Clicking it invokes
-        /// <paramref name="onClick"/> with the resolved FlipbookContext.
-        /// </summary>
         public static void RegisterFlipbookPageButton(
             string text,
             string tooltip,
@@ -277,29 +257,28 @@ namespace UmeVrcfQol {
                 Text = text, Tooltip = tooltip, OnClick = onClick,
                 Visible = visible, Order = order,
             });
-            // Sort stable by Order.
             _inlinePageButtons.Sort((a, b) => a.Order.CompareTo(b.Order));
         }
 
         // =========================== Context resolvers ========================
 
         internal struct FlipbookContext {
-            public Component vrcfComponent;       // the VRCFury MonoBehaviour
-            public object toggle;                 // VF.Model.Feature.Toggle
-            public string toggleName;             // Toggle.name (menu path)
-            public object flipbookAction;         // VF.Model.StateAction.FlipBookBuilderAction
-            public IList pages;                   // List<FlipBookPage>
-            public int pageIndex;                 // -1 if from builder (not page)
+            public Component vrcfComponent;
+            public object toggle;
+            public string toggleName;
+            public object flipbookAction;
+            public IList pages;
+            public int pageIndex;
         }
 
         internal struct ToggleContext {
             public Component vrcfComponent;
             public object toggle;
             public string toggleName;
-            public object state;                  // Toggle.state
-            public IList actions;                 // State.actions
-            public object flipbookAction;         // may be null (no flipbook)
-            public bool slider;                   // Toggle.slider
+            public object state;
+            public IList actions;
+            public object flipbookAction;
+            public bool slider;
         }
 
         internal static bool TryResolveFlipbookFromPage(SerializedProperty pageProp, out FlipbookContext ctx) {
@@ -348,10 +327,9 @@ namespace UmeVrcfQol {
             if (content == null || content.GetType() != r.ToggleType) return false;
             var state = r.ToggleStateField.GetValue(content);
             var toggleActions = r.StateActionsField.GetValue(state) as IList;
-            // Resolve the specific builder from the serialized reference value.
             var fb = builderProp.managedReferenceValue;
             if (fb == null || fb.GetType() != r.FlipbookBuilderActionType) {
-                fb = FindFlipbookAction(toggleActions); // fallback
+                fb = FindFlipbookAction(toggleActions);
             }
             if (fb == null) return false;
             var pages = r.PagesField.GetValue(fb) as IList;
@@ -381,7 +359,7 @@ namespace UmeVrcfQol {
             var actions = r.StateActionsField.GetValue(state) as IList;
             var fb = FindFlipbookAction(actions);
             bool slider = false;
-            try { slider = (bool)r.ToggleSliderField.GetValue(content); } catch { slider = false; }
+            try { if (r.ToggleSliderField != null) slider = (bool)r.ToggleSliderField.GetValue(content); } catch { slider = false; }
 
             ctx = new ToggleContext {
                 vrcfComponent = comp,
@@ -395,11 +373,6 @@ namespace UmeVrcfQol {
             return true;
         }
 
-        /// <summary>
-        /// Given a VRCFury component known to hold a Toggle with a Flipbook Builder,
-        /// returns the resolved context. Used by the overlay when the starting point
-        /// is the Component (not a SerializedProperty).
-        /// </summary>
         internal static bool TryResolveFlipbookFromComponent(Component vrcf, out FlipbookContext ctx) {
             ctx = default;
             if (vrcf == null) return false;
@@ -426,10 +399,6 @@ namespace UmeVrcfQol {
 
         // =========================== Clone / clipboard ========================
 
-        /// <summary>
-        /// Deep-clone a FlipBookPage. Creates fresh Page/State/Action instances;
-        /// JsonUtility preserves UnityEngine.Object references by instance id.
-        /// </summary>
         internal static object DeepClonePage(object sourcePage) {
             var r = Reflection;
             var srcState = r.PageStateField.GetValue(sourcePage);
@@ -454,13 +423,8 @@ namespace UmeVrcfQol {
             return newPage;
         }
 
-        /// <summary>
-        /// Session-scoped clipboard for flipbook pages. Holds a deep copy — safe
-        /// to paste across scenes, prefabs, or different VRCFury components.
-        /// Cleared on Editor restart.
-        /// </summary>
         internal static class PageClipboard {
-            private static object _clone; // deep copy
+            private static object _clone;
             private static string _sourceDescription;
 
             public static bool HasValue => _clone != null;
@@ -474,12 +438,7 @@ namespace UmeVrcfQol {
 
             public static object TakeClone() {
                 if (_clone == null) return null;
-                // Return ANOTHER deep clone each paste, so pasting twice doesn't link pages.
-                // Cheap enough — pages are small.
-                var src = _clone;
-                // Rebuild by round-tripping via DeepClonePage through a fake FlipbookContext? No —
-                // we can just clone the existing stored clone.
-                return DeepClonePage(src);
+                return DeepClonePage(_clone);
             }
         }
 
@@ -504,26 +463,33 @@ namespace UmeVrcfQol {
         }
 
         // =========================== Reflection cache =========================
+        //
+        // Exposed as an instance singleton (via the static `Reflection` property)
+        // so tools can write `var r = VrcfQol.Reflection;` and then read `r.X`.
+        // A purely static class would force `VrcfQol.Reflection.X` everywhere,
+        // and would also prevent `var r = ...` captures at all.
 
-        internal static class Reflection {
-            public static Assembly VrcfuryAsm { get; private set; }
-            public static Type VRCFuryType { get; private set; }
-            public static Type ToggleType { get; private set; }
-            public static Type StateType { get; private set; }
-            public static Type FlipbookBuilderActionType { get; private set; }
-            public static Type FlipbookPageType { get; private set; }
+        internal static ReflectionCache Reflection { get; } = new ReflectionCache();
 
-            public static FieldInfo ContentField { get; private set; }
-            public static FieldInfo ToggleNameField { get; private set; }
-            public static FieldInfo ToggleStateField { get; private set; }
-            public static FieldInfo ToggleSliderField { get; private set; }
-            public static FieldInfo ToggleUseGlobalParamField { get; private set; }
-            public static FieldInfo ToggleGlobalParamField { get; private set; }
-            public static FieldInfo StateActionsField { get; private set; }
-            public static FieldInfo PagesField { get; private set; }
-            public static FieldInfo PageStateField { get; private set; }
+        internal sealed class ReflectionCache {
+            public Assembly VrcfuryAsm { get; private set; }
+            public Type VRCFuryType { get; private set; }
+            public Type ToggleType { get; private set; }
+            public Type StateType { get; private set; }
+            public Type FlipbookBuilderActionType { get; private set; }
+            public Type FlipbookPageType { get; private set; }
 
-            public static bool TryEnsure(out string error) {
+            public FieldInfo ContentField { get; private set; }
+            public FieldInfo ToggleNameField { get; private set; }
+            public FieldInfo ToggleStateField { get; private set; }
+            public FieldInfo ToggleSliderField { get; private set; }
+            public FieldInfo ToggleUseGlobalParamField { get; private set; }
+            public FieldInfo ToggleGlobalParamField { get; private set; }
+            public FieldInfo StateActionsField { get; private set; }
+            public FieldInfo PagesField { get; private set; }
+            public FieldInfo PageStateField { get; private set; }
+
+            public bool TryEnsure(out string error) {
                 error = null;
                 if (VRCFuryType != null) return true;
 
@@ -560,14 +526,14 @@ namespace UmeVrcfQol {
                 PagesField = FlipbookBuilderActionType.GetField("pages", any);
                 PageStateField = FlipbookPageType.GetField("state", any);
                 if (ContentField == null || ToggleNameField == null || ToggleStateField == null ||
-                    ToggleSliderField == null ||
                     StateActionsField == null || PagesField == null || PageStateField == null) {
                     error = "One or more expected fields on VRCFury model types were not found.";
                     VRCFuryType = null;
                     return false;
                 }
-                // useGlobalParam / globalParam are optional (older VRCFury versions may
-                // not expose them). Tools that depend on them should null-check.
+                // ToggleSliderField, ToggleUseGlobalParamField and ToggleGlobalParamField are
+                // optional - older VRCFury versions may not expose them. Tools that depend on
+                // them should null-check.
                 return true;
             }
         }

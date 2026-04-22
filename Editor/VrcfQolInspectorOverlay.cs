@@ -3,18 +3,18 @@
 // elements with inline UI.
 //
 // Currently:
-//   • Each "Page #N" label inside a Flipbook Builder gets a row of buttons
+//   - Each "Page #N" label inside a Flipbook Builder gets a row of buttons
 //     sourced from the VrcfQol.InlinePageButtons registry. Tools register the
 //     button; the overlay handles placement.
-//   • Each Toggle inspector (the VRCFury component with a Toggle content) gets a
-//     status banner pinned to the top of the window explaining that the Global
-//     Parameter is being auto-managed (and a button to disable that per-toggle).
+//   - Each Toggle inspector (the VRCFury component with a Toggle content) gets
+//     a status banner pinned to the top of the window explaining that the
+//     Global Parameter is being auto-managed, with an inline button to opt
+//     the current toggle in/out.
 //
 // This is intentionally defensive: if VRCFury restructures its inspector, the
-// overlay silently finds nothing and does nothing — the right-click context
+// overlay silently finds nothing and does nothing - the right-click context
 // menu still works as the authoritative entry point.
 
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -25,16 +25,12 @@ namespace UmeVrcfQol {
 
     [InitializeOnLoad]
     internal static class VrcfQolInspectorOverlay {
-        // UI classes used to mark nodes we've already decorated, so we don't
-        // inject twice on the same element.
         private const string InjectedClass = "vrcfqol-injected";
         private const string ButtonBarClass = "vrcfqol-buttons";
         private const string ToggleBannerClass = "vrcfqol-toggle-banner";
 
-        // Matches "Page #<number>" exactly as VRCFury writes it.
         private static readonly Regex PageLabelRegex = new Regex(@"^Page #(\d+)$", RegexOptions.Compiled);
 
-        // Throttle the scan — every ~250ms is plenty responsive and barely measurable.
         private const double ScanIntervalSeconds = 0.25;
         private static double _nextScan;
 
@@ -45,13 +41,12 @@ namespace UmeVrcfQol {
         private static void Tick() {
             if (EditorApplication.timeSinceStartup < _nextScan) return;
             _nextScan = EditorApplication.timeSinceStartup + ScanIntervalSeconds;
-            try { Scan(); } catch { /* defensive — never let overlay break the inspector */ }
+            try { Scan(); } catch { /* defensive */ }
         }
 
         private static void Scan() {
             if (!VrcfQol.Reflection.TryEnsure(out _)) return;
 
-            // All InspectorWindow instances currently open.
             var allWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
             foreach (var w in allWindows) {
                 if (w == null) continue;
@@ -63,10 +58,8 @@ namespace UmeVrcfQol {
         }
 
         private static void ScanRoot(VisualElement root) {
-            // 1. Toggle-level auto-update banner.
             EnsureToggleBanner(root);
 
-            // 2. Per-page inline buttons.
             var labels = root.Query<Label>().ToList();
             foreach (var label in labels) {
                 if (label.ClassListContains(InjectedClass)) continue;
@@ -83,7 +76,6 @@ namespace UmeVrcfQol {
         private static void EnsureToggleBanner(VisualElement root) {
             var existing = root.Q<VisualElement>(className: ToggleBannerClass);
 
-            // Determine what banner SHOULD be shown based on current selection.
             Component target = null;
             var selected = Selection.activeGameObject;
             if (selected != null && VrcfQol.Reflection.TryEnsure(out _)) {
@@ -106,7 +98,6 @@ namespace UmeVrcfQol {
             bool supported = VrcfQol.Reflection.ToggleUseGlobalParamField != null
                           && VrcfQol.Reflection.ToggleGlobalParamField != null;
 
-            // Rebuild (cheap — one line, two buttons) so state stays in sync.
             if (existing == null) {
                 existing = new VisualElement();
                 existing.AddToClassList(ToggleBannerClass);
@@ -129,7 +120,7 @@ namespace UmeVrcfQol {
 
             if (!supported) {
                 existing.style.backgroundColor = new StyleColor(new Color(0.35f, 0.35f, 0.35f, 0.8f));
-                var msg = new Label("VRCF QoL: this VRCFury version doesn't expose Global Parameter fields — auto-update is disabled.");
+                var msg = new Label("VRCF QoL: this VRCFury version doesn't expose Global Parameter fields - auto-update is disabled.");
                 msg.style.color = new StyleColor(Color.white);
                 msg.style.flexGrow = 1;
                 msg.style.whiteSpace = WhiteSpace.Normal;
@@ -141,7 +132,7 @@ namespace UmeVrcfQol {
                 ? new StyleColor(new Color(0.45f, 0.25f, 0.20f, 0.85f))
                 : new StyleColor(new Color(0.18f, 0.40f, 0.22f, 0.85f));
 
-            var icon = new Label(optedOut ? "●" : "✓");
+            var icon = new Label(optedOut ? "*" : "v");
             icon.style.color = new StyleColor(Color.white);
             icon.style.marginRight = 6;
             icon.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -149,7 +140,7 @@ namespace UmeVrcfQol {
 
             var label = new Label(optedOut
                 ? "VRCF QoL: Global Parameter auto-update DISABLED for this toggle"
-                : "VRCF QoL: Global Parameter is auto-synced to Menu Path — don't edit it manually");
+                : "VRCF QoL: Global Parameter is auto-synced to Menu Path - don't edit it manually");
             label.style.color = new StyleColor(Color.white);
             label.style.flexGrow = 1;
             label.style.whiteSpace = WhiteSpace.Normal;
@@ -163,8 +154,6 @@ namespace UmeVrcfQol {
             var btn = new Button(() => {
                 AutoGlobalParameterTool.SetOptedOut(capturedTarget, !capturedOptedOut);
                 if (capturedOptedOut) {
-                    // Was disabled, now enabling — apply immediately so the
-                    // user sees the Global Parameter update on screen.
                     AutoGlobalParameterTool.ApplyTo(capturedTarget, force: true);
                 }
             }) {
@@ -181,22 +170,16 @@ namespace UmeVrcfQol {
         // ----------------------------------------------------------------------
 
         private static void TryInjectPageButtons(Label pageLabel) {
-            // Mark the label so we don't try again this lifecycle.
             pageLabel.AddToClassList(InjectedClass);
 
             var parent = pageLabel.parent;
             if (parent == null) return;
-
-            // Avoid re-decorating a parent we've already touched.
             if (parent.ClassListContains(ButtonBarClass)) return;
             parent.AddToClassList(ButtonBarClass);
 
-            // No buttons registered — nothing to do.
             var specs = VrcfQol.InlinePageButtons;
             if (specs == null || specs.Count == 0) return;
 
-            // Build the button row: we replace the bare label with a row containing
-            // [label, spacer, button1, button2, ...].
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
             row.style.alignItems = Align.Center;
@@ -225,7 +208,6 @@ namespace UmeVrcfQol {
         }
 
         private static void OnInlineButtonClicked(Label pageLabel, VrcfQol.InlineButtonSpec spec) {
-            // Page index from "Page #N".
             var match = PageLabelRegex.Match(pageLabel.text ?? "");
             if (!match.Success) return;
             if (!int.TryParse(match.Groups[1].Value, out var oneBasedIndex)) return;
@@ -248,7 +230,6 @@ namespace UmeVrcfQol {
                 if (ctx.pages == null || sourceIndex < 0 || sourceIndex >= ctx.pages.Count) continue;
                 ctx.pageIndex = sourceIndex;
 
-                // Hide/disable check.
                 if (spec.Visible != null) {
                     bool vis;
                     try { vis = spec.Visible(ctx); } catch { vis = true; }
@@ -271,7 +252,7 @@ namespace UmeVrcfQol {
 
             EditorUtility.DisplayDialog("VRCF QoL",
                 "Could not find a flipbook toggle on the selected GameObject that contains this page. " +
-                "If the flipbook is on a different object than the current selection, use right-click → VRCF QoL → ... instead.",
+                "If the flipbook is on a different object than the current selection, use right-click VRCF QoL ... instead.",
                 "OK");
         }
     }
