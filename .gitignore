@@ -1,0 +1,11 @@
+# Unity editor/meta cruft users may drop alongside this script —
+# this repo only ships the .cs file itself.
+*.meta
+
+# IDE / OS noise
+.vs/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
