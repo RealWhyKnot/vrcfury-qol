@@ -1,78 +1,86 @@
-# VRCFury Flipbook Tools
+# VRCFury QoL
 
-A small set of Unity editor tools for working with **VRCFury Flipbook Builder** toggles. Useful when you've got a bunch of independent VRCFury toggles (outfit pieces, hair styles, preset configurations…) and want to collapse them into a single radial slider — or tweak an existing flipbook without clicking through the Inspector.
+Small Unity editor tools that add convenience actions directly to the VRCFury component inspector. The goal: tools appear *where you're already working* (right-click a page, click a button on a flipbook row) instead of hiding in a separate window.
 
-All tools live under **Tools → VRCFury →** in the main Unity menu.
+Currently ships with two flipbook tools. The framework is designed so adding a new tool — flipbook or otherwise — is a single small file.
 
-## Tools
+## What you get
 
-### Migrate Toggles Into Flipbook
+### Flipbook Builder → right-click → *Migrate child toggles as pages*
 
-`VrcfMigrateTogglesToFlipbook.cs`
+Right-click anywhere on a Flipbook Builder action. Get a menu item that scans the same GameObject + descendants for other non-flipbook VRCFury toggles, and folds each into this flipbook as a new page. Source VRCFury components are deleted after migration. A confirmation dialog shows exactly what's going to happen; `Ctrl+Z` reverts the whole thing.
 
-Takes every non-flipbook VRCFury Toggle in the selected subtree and folds it into a destination flipbook toggle as a new page. Source VRCFury components are deleted afterward.
+### Flipbook page → right-click → *Duplicate page to end*
 
-**Use when:** you have many independent toggles and want to turn them into a single radial selector.
+Right-click on any page inside a Flipbook Builder (the row with the `Page #N` header). Get a menu item that deep-clones that page and appends the copy at the end of the flipbook. The new page is independent — editing it doesn't affect the original.
 
-**Usage:**
+### Flipbook page → inline *Duplicate → End* button
 
-1. Select the GameObject holding your destination flipbook toggle (or an ancestor).
-2. **Tools → VRCFury → Migrate Toggles Into Flipbook**.
-3. Review the confirmation dialog (destination + ordered list of sources) and click **Migrate**.
-4. Save the scene. `Ctrl+Z` reverts the whole migration.
-
-**Matching rules:**
-
-- **Destination:** exactly one VRCFury Toggle in the subtree whose state contains a `FlipBookBuilderAction`. Zero or multiple → the tool aborts with a clear dialog.
-- **Sources:** every other VRCFury Toggle in the same subtree whose state does not already have a `FlipBookBuilderAction`.
-- **Order:** hierarchy / sibling order.
-- **Existing pages:** preserved. Migrated sources are appended after.
-- **Dropped settings:** source toggles' menu path, `saved`, `defaultOn`, exclusive tags, icon, transitions, etc. are not carried over — a flipbook page is just a set of actions.
-
-### Duplicate Flipbook Page
-
-`VrcfDuplicateFlipbookPage.cs`
-
-Opens a small window that lists every page of the selected flipbook and gives each row a **Duplicate to end** button. Clicking one deep-copies that page and appends the copy to the end of the flipbook.
-
-**Use when:** you want to clone page #7 to page #8 as a starting point, without rebuilding the actions by hand.
-
-**Usage:**
-
-1. Select the GameObject holding your flipbook toggle (or an ancestor).
-2. **Tools → VRCFury → Duplicate Flipbook Page…**.
-3. In the window, click **Duplicate to end** on any row.
-4. Save the scene. `Ctrl+Z` reverts.
-
-**Deep copy guarantee:** the new page is independent of the source — editing page #8's actions after duplication will not affect page #7. Each action is cloned via `JsonUtility` round-trip, which preserves Unity `Object` references (GameObjects, Renderers, animation clips) by instance id while creating fresh instances of the value-type fields.
+For discoverability, a small **Duplicate → End** button is also injected next to every `Page #N` label. Clicking it does the same thing as the right-click version. This is best-effort UI injection: if a future VRCFury version changes the page layout, the button silently disappears and the right-click menu still works.
 
 ## Installation
 
-1. Copy the `.cs` files into any `Assets/Editor/` folder in your Unity project. (Create the folder if you don't have one — Unity compiles anything under a folder named `Editor` as an editor-only assembly.)
-2. Let Unity compile. Done.
+Copy the `Editor/` folder into your Unity project, under `Assets/`. Any path works as long as the folder is inside `Assets/` and is called `Editor` (or has an `Editor` folder as an ancestor) — Unity compiles it as an editor-only assembly.
 
 No asmdef, no dependencies beyond VRCFury itself.
 
-## How it works under the hood
-
-The VRCFury runtime types (`VF.Model.VRCFury`, `VF.Model.Feature.Toggle`, `VF.Model.StateAction.FlipBookBuilderAction`, etc.) are marked `internal`, so an editor script in `Assets/Editor/` can't reference them directly. The scripts use reflection to locate the types and their fields by name. That means:
-
-- No asmdef changes or `InternalsVisibleTo` required.
-- The scripts keep working across VRCFury upgrades as long as the field names (`content`, `state`, `actions`, `pages`, `name`) stay stable.
-- If VRCFury renames those fields in a future version, the scripts show a clean error dialog rather than crashing.
+```
+Assets/
+  Editor/
+    VrcfQol.cs
+    VrcfQolInspectorOverlay.cs
+    Tools/
+      DuplicateFlipbookPageTool.cs
+      MigrateIntoFlipbookTool.cs
+```
 
 Tested against VRCFury `1.1303.x`.
 
+## Adding your own tool
+
+A tool is a small `[InitializeOnLoad]` static class that registers itself with `VrcfQol`. Skeleton:
+
+```csharp
+using UnityEditor;
+using UnityEngine;
+
+namespace UmeVrcfQol.Tools {
+    [InitializeOnLoad]
+    internal static class MyCoolTool {
+        static MyCoolTool() {
+            VrcfQol.RegisterPropertyTool(
+                label: "VRCF QoL/Do something cool",
+                match: prop => prop.propertyPath.EndsWith(".mySpecialField"),
+                action: prop => {
+                    Debug.Log($"Hello from {prop.propertyPath}");
+                    // ... mutate the prop, your SerializedObject, or the underlying target.
+                }
+            );
+        }
+    }
+}
+```
+
+Rules of thumb:
+
+- **`match`** decides whether the right-click menu item appears for a given property. Keep it cheap — it runs on every right-click. Use `propertyPath` for positional matches, or `managedReferenceFullTypename` for `[SerializeReference]` types.
+- **`action`** does the work. Wrap destructive changes in `Undo.RegisterCompleteObjectUndo` / `Undo.DestroyObjectImmediate` so users can `Ctrl+Z` the change. Call `EditorUtility.SetDirty(target)` so Unity knows to save.
+- **Reflection helpers.** VRCFury's runtime types are `internal`, so the framework ships a resolved-by-name reflection cache at `VrcfQol.Reflection.ToggleType`, `.PagesField`, etc. Use it instead of rolling your own.
+
+The existing tools in `Editor/Tools/` are short — borrow freely.
+
+## How it works under the hood
+
+VRCFury's `VF.Model.VRCFury`, `VF.Model.Feature.Toggle`, and `VF.Model.StateAction.FlipBookBuilderAction` types are marked `internal`. An editor script in a user's `Assets/Editor/` folder can't reference them directly. This project uses reflection to resolve the types by name at runtime, and if VRCFury ever renames a field, each tool surfaces a clean error dialog rather than crashing.
+
+The right-click menu items ride on Unity's `EditorApplication.contextualPropertyMenu` — the exact same hook Unity itself uses for Copy/Paste on fields. The inline **Duplicate → End** button uses a light UIElements overlay that scans open inspector windows every ~250 ms and attaches a button next to each `Page #N` label it finds. No `[CustomPropertyDrawer]` overrides, no fighting with VRCFury's existing drawers.
+
 ## Not a replacement for review
 
-These tools do real, destructive changes to your scene (deleting source VRCFury components in the migrator). Always:
+These tools make real, destructive changes to your scene (deleting source VRCFury components during a migration). Always:
 
-1. Commit your project to version control first, or duplicate the scene/avatar.
-2. Try it on one small group before pointing it at anything large.
-
-## Contributing
-
-Issues and PRs welcome. If you add features (page names, per-source filters, different matching rules), please keep the core behavior opt-in behind menu items or dialog options so existing users aren't surprised.
+1. Commit your project to version control first, or duplicate the avatar.
+2. Try any tool on one small group before pointing it at anything large.
 
 ## License
 
