@@ -4,7 +4,7 @@
 // itself lives in ReplaceReferencesWindow.cs.
 //
 // Two ways to open it:
-//   1. Window/VRCFury QoL/Replace References...    (top-level menu)
+//   1. Tools/VRCFury QoL/Replace References...     (top-level menu)
 //   2. Right-click a GameObject in the hierarchy → "VRCFury QoL/Replace
 //      references in selection..." (pre-fills the search list with the
 //      currently selected GameObjects)
@@ -18,7 +18,7 @@ namespace UmeVrcfQol.Tools {
     internal static class ReplaceReferencesTool {
 
         private const string GameObjectMenuPath = "GameObject/VRCFury QoL/Replace references in selection...";
-        private const string WindowMenuPath     = "Window/VRCFury QoL/Replace References...";
+        private const string ToolsMenuPath      = "Tools/VRCFury QoL/Replace References...";
 
         static ReplaceReferencesTool() {
             // Registration is implicit — both menu items below are static, so
@@ -27,8 +27,8 @@ namespace UmeVrcfQol.Tools {
             // so users can confirm the file is being loaded.
         }
 
-        [MenuItem(WindowMenuPath, false, 2000)]
-        private static void OpenFromWindowMenu() {
+        [MenuItem(ToolsMenuPath, false, 2000)]
+        private static void OpenFromToolsMenu() {
             ReplaceReferencesWindow.Open(prefillFromSelection: false);
         }
 

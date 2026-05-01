@@ -40,19 +40,19 @@ The green banner at the top of every Toggle inspector confirms auto-sync is acti
 - The Toggle has a name set, right? The sync skips toggles with empty/whitespace names — there's nothing useful to set `globalParam` to. Once you name the toggle, the next 0.5 s tick syncs it and the banner appears.
 - The component might be in a closed prefab stage. The sync only operates on the open scene + open prefab stage.
 
-## Replace-References window finds zero matches
+## Replace-References lists nothing
 
-- **The From object isn't actually referenced in any selected GameObject's VRCFury components.** Try right-clicking a known reference target in the hierarchy → *VRCFury QoL → Replace references in selection…* — the window pre-fills the search list and you can verify by setting From to that target.
-- **You picked a different instance.** For scene objects, `==` is identity-based — two different GameObjects with the same name aren't equal. Drag the actual referenced object into the From field, not a same-named sibling.
-- **The reference is a string path, not an Object reference.** This tool only handles `ObjectReference` properties. Some VRCFury fields store paths as strings (e.g. animation curve target paths) — those aren't covered. See [issue #5](https://github.com/RealWhyKnot/vrcfury-qol/issues) for ongoing work.
+- **No VRCFury components in the selection.** The window walks every selected GameObject *and its children* for VRCFury components. If none are found, nothing to list. Try selecting the avatar root.
+- **All references are null.** The scan skips properties whose current value is `null` — there's nothing to replace. If a reference is supposed to be set, fix that in the VRCFury inspector first.
+- **The reference is a string path, not an Object reference.** This tool only handles `ObjectReference` properties. Some VRCFury fields store paths as strings (e.g. animation curve target paths) — those aren't covered.
 
 ## Replace-References "skipped N stale entries"
 
-A match's underlying ref drifted between *Find* and *Apply*. Causes include:
-- The user manually edited the field in another inspector after Find.
+A row's underlying ref drifted between *Scan* and *Apply*. Causes include:
+- The user manually edited the field in another inspector after the scan.
 - A different tool (or another Apply) changed the ref first.
 
-The stale match is skipped to avoid blindly overwriting a value the user didn't see. Click *Refresh* to re-scan.
+The stale row is skipped to avoid blindly overwriting a value the user didn't see. Click *Refresh* to re-scan.
 
 ## Move tool: "Merge into one component" is greyed out
 
