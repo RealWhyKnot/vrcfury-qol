@@ -71,13 +71,24 @@ The sync deliberately **does not** wrap each tick in Undo (that would flood the 
 
 Single Undo step reverts everything.
 
-## Duplicate Flipbook Page
+## Flipbook Page Operations
 
-**Where:** Right-click a `Page #N` row → *VRCFury QoL → Duplicate page to end*. Also injected as an inline **Duplicate → End** button next to every `Page #N` label.
+**Where:** Right-click a `Page #N` row, or use the inline buttons next to every `Page #N` label.
 
-**What it does:** Deep-clones the page (every action is round-tripped via `JsonUtility.ToJson` / `FromJson` so the new state is independent) and appends the copy to the end of the same flipbook.
+Three positional variants:
+- **Duplicate page below** *(inline `Dup ↓`)* — deep-clones the page and inserts the copy at index + 1, shifting later pages down.
+- **Insert empty page below** *(inline `Insert ↓`)* — inserts a fresh empty page at index + 1. Mirrors what VRCFury creates when you press its own "+" button, just positioned where you want it.
+- **Duplicate page to end** — deep-clones the page and appends the copy at the end of the flipbook (the original behaviour, kept on the right-click menu for cases where you want the new page out of the way).
 
-The inline button is best-effort UI injection: if a future VRCFury version changes the page layout, the button silently disappears and the right-click menu still works.
+Page deep-clone uses a `JsonUtility.ToJson` / `FromJson` round-trip on every action, so the new page's state is fully independent of the original.
+
+The inline buttons are best-effort UI injection: if a future VRCFury version changes the page layout, the buttons silently disappear and the right-click menu still works.
+
+## Duplicate State Action
+
+**Where:** Right-click any state action inside a VRCFury Toggle (or inside a flipbook page's state) → *VRCFury QoL → Duplicate this action*.
+
+**What it does:** Deep-clones a single state action (ObjectToggleAction, BlendShape, MaterialPropertyAction, AnimationClipAction, etc.) and inserts the copy at index + 1 in the same actions list. Works at any nesting depth — the path resolver walks the SerializedProperty path with reflection and recognises `.actions.Array.data[N]` boundaries, so it handles top-level Toggle actions and flipbook-page actions equally.
 
 ## Hot Reload + Compile Log
 

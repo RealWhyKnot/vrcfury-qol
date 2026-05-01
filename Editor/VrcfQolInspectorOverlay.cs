@@ -60,12 +60,34 @@ namespace UmeVrcfQol {
         private static void ScanRoot(VisualElement root) {
             EnsureToggleBanner(root);
 
+            // Capture the inspector's scroll position so we can restore it
+            // if our injection causes the layout to shift. VRCFury rebuilds
+            // its own visual tree on drag operations and other state changes,
+            // and our overlay re-injects buttons in response — without a
+            // restore the user is dropped at the top of the page list every
+            // time, which is exactly the "scroll gets messed up after dragging"
+            // symptom the user reported.
+            var scroll = root.Q<ScrollView>();
+            Vector2 savedScrollOffset = scroll != null ? scroll.scrollOffset : Vector2.zero;
+
+            int injectedThisScan = 0;
             var labels = root.Query<Label>().ToList();
             foreach (var label in labels) {
                 if (label.ClassListContains(InjectedClass)) continue;
                 var match = PageLabelRegex.Match(label.text ?? "");
                 if (!match.Success) continue;
-                TryInjectPageButtons(label);
+                if (TryInjectPageButtons(label)) injectedThisScan++;
+            }
+
+            if (injectedThisScan > 0 && scroll != null) {
+                // Defer the restore one frame so any layout pass triggered by
+                // our insertion has a chance to finish first; otherwise we'd
+                // set scrollOffset to a value that gets re-clamped immediately.
+                var capturedScroll = scroll;
+                var capturedOffset = savedScrollOffset;
+                scroll.schedule
+                    .Execute(() => capturedScroll.scrollOffset = capturedOffset)
+                    .ExecuteLater(0);
             }
         }
 
@@ -169,28 +191,34 @@ namespace UmeVrcfQol {
         // Per-page inline buttons
         // ----------------------------------------------------------------------
 
-        private static void TryInjectPageButtons(Label pageLabel) {
+        // Returns true if buttons were freshly injected (caller uses this to
+        // decide whether the inspector's scroll position should be restored).
+        private static bool TryInjectPageButtons(Label pageLabel) {
             pageLabel.AddToClassList(InjectedClass);
 
             var parent = pageLabel.parent;
-            if (parent == null) return;
-            if (parent.ClassListContains(ButtonBarClass)) return;
+            if (parent == null) return false;
+            if (parent.ClassListContains(ButtonBarClass)) return false;
             parent.AddToClassList(ButtonBarClass);
 
             var specs = VrcfQol.InlinePageButtons;
-            if (specs == null || specs.Count == 0) return;
+            if (specs == null || specs.Count == 0) return false;
 
-            var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.alignItems = Align.Center;
-
-            int labelIndex = parent.IndexOf(pageLabel);
-            parent.RemoveAt(labelIndex);
-            row.Add(pageLabel);
-
-            var spacer = new VisualElement();
-            spacer.style.flexGrow = 1;
-            row.Add(spacer);
+            // Sibling-insert approach: keep the label exactly where it is and
+            // just append a button container as the next sibling. Doing it this
+            // way (rather than removing the label and re-parenting it under a
+            // wrapper row) avoids two extra mutations to the visual tree, which
+            // is what was triggering scroll resets on every overlay tick during
+            // a flipbook page drag.
+            var buttons = new VisualElement();
+            buttons.AddToClassList(ButtonBarClass);
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.style.alignItems = Align.Center;
+            buttons.style.justifyContent = Justify.FlexEnd;
+            buttons.style.flexShrink = 0;
+            buttons.style.marginLeft = 8;
+            buttons.style.marginTop = 1;
+            buttons.style.marginBottom = 1;
 
             foreach (var spec in specs) {
                 var capturedSpec = spec;
@@ -201,10 +229,12 @@ namespace UmeVrcfQol {
                 btn.style.marginLeft = 4;
                 btn.style.paddingLeft = 8;
                 btn.style.paddingRight = 8;
-                row.Add(btn);
+                buttons.Add(btn);
             }
 
-            parent.Insert(labelIndex, row);
+            int labelIndex = parent.IndexOf(pageLabel);
+            parent.Insert(labelIndex + 1, buttons);
+            return true;
         }
 
         private static void OnInlineButtonClicked(Label pageLabel, VrcfQol.InlineButtonSpec spec) {
