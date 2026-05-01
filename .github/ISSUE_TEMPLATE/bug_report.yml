@@ -1,0 +1,81 @@
+name: Bug report
+description: Something is broken.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, skim the [Troubleshooting wiki page](https://github.com/RealWhyKnot/vrcfury-qol/wiki/Troubleshooting) — common failure modes are documented there.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. What did you do, what did you expect, what happened instead?
+      placeholder: |
+        Steps to reproduce:
+        1. ...
+        2. ...
+        Expected: ...
+        Actual: ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool is affected?
+      multiple: true
+      options:
+        - Move VRCFury Components
+        - Replace References
+        - Auto Global Parameter
+        - Migrate Child Toggles into Flipbook
+        - Duplicate Flipbook Page
+        - Hot Reload / compile log
+        - Inspector overlay (banners / inline buttons)
+        - Framework / reflection cache
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: unity-version
+    attributes:
+      label: Unity version
+      placeholder: e.g. 2022.3.22f1
+    validations:
+      required: true
+
+  - type: input
+    id: vrcfury-version
+    attributes:
+      label: VRCFury version
+      description: Visible at the top of any VRCFury component in the inspector.
+      placeholder: e.g. 1.1303.0
+    validations:
+      required: true
+
+  - type: input
+    id: vrcfqol-version
+    attributes:
+      label: vrcfury-qol commit / version
+      description: Latest commit SHA you have in `Editor/`, or the release tag.
+      placeholder: e.g. main @ 968fc19
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Unity console output
+      description: |
+        Copy any errors/exceptions from the Unity console. The hot-reload tool also writes a log at `<ProjectRoot>/Logs/VrcfQolHotReload.log` — paste relevant lines.
+      render: text
+
+  - type: textarea
+    id: extra-context
+    attributes:
+      label: Anything else?
+      description: Screenshots, scene/prefab snippets, hardware notes — anything that helps reproduce.

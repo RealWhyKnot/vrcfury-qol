@@ -478,6 +478,9 @@ namespace UmeVrcfQol {
             public Type StateType { get; private set; }
             public Type FlipbookBuilderActionType { get; private set; }
             public Type FlipbookPageType { get; private set; }
+            // Optional — present in versions that still expose a top-level `config.features`
+            // list. Null on newer versions that switched to a single `content` slot.
+            public Type ConfigType { get; private set; }
 
             public FieldInfo ContentField { get; private set; }
             public FieldInfo ToggleNameField { get; private set; }
@@ -488,6 +491,9 @@ namespace UmeVrcfQol {
             public FieldInfo StateActionsField { get; private set; }
             public FieldInfo PagesField { get; private set; }
             public FieldInfo PageStateField { get; private set; }
+            // Optional — see ConfigType.
+            public FieldInfo ConfigField { get; private set; }
+            public FieldInfo FeaturesField { get; private set; }
 
             public bool TryEnsure(out string error) {
                 error = null;
@@ -534,6 +540,15 @@ namespace UmeVrcfQol {
                 // ToggleSliderField, ToggleUseGlobalParamField and ToggleGlobalParamField are
                 // optional - older VRCFury versions may not expose them. Tools that depend on
                 // them should null-check.
+
+                // Optional: legacy `config.features` list. Present on versions that still
+                // ship VRCFuryConfig (or equivalent). Used by the merge-mode of the move
+                // tool; null-checked at call sites so its absence doesn't fail TryEnsure.
+                ConfigType = VrcfuryAsm.GetType("VF.Model.VRCFuryConfig", false);
+                ConfigField = VRCFuryType.GetField("config", any);
+                if (ConfigType != null) {
+                    FeaturesField = ConfigType.GetField("features", any);
+                }
                 return true;
             }
         }

@@ -1,11 +1,46 @@
-# Unity editor/meta cruft users may drop alongside this script —
-# this repo only ships the .cs file itself.
+# vrcfury-qol ships only its source files and is consumed by Unity projects
+# that already manage their own Library/, Temp/, etc. We don't ship .meta
+# files because tools live as raw .cs sources alongside whatever .meta the
+# consuming project generates.
+
+# Unity-generated noise (in case someone clones this directly into Assets/)
+Library/
+Temp/
+Logs/
+Obj/
+Build/
+Builds/
+[Aa]ssetStoreTools/
+*.csproj
+*.sln
+*.unityproj
+*.user
+*.suo
+*.tmp
+*.userprefs
+sysinfo.txt
+*.pidb
+*.booproj
+*.svd
+*.apk
+*.ipa
+*.unitypackage
+
+# .meta files — see header
 *.meta
 
-# IDE / OS noise
+# IDE / OS
 .vs/
 .idea/
+.vscode/
 *.swp
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local Claude Code state (per-clone, not shared)
+.claude/
+
+# Per-project hot-reload log (output of VrcfQolHotReload.cs when used in a Unity project)
+VrcfQolHotReload.log
+VrcfQolHotReload.log.old

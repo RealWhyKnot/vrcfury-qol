@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # GitHub Actions runners — keep workflow action versions current.
+  # No npm/nuget ecosystems here (this repo only ships .cs source consumed by
+  # Unity itself; the Unity Editor manages package dependencies on its own).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
