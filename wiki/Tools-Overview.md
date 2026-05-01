@@ -19,18 +19,20 @@ The dialog enforces same-scene-as-source and disables itself on identical source
 
 **Where:** *Tools → VRCFury QoL → Replace References…*, or right-click a hierarchy selection → *VRCFury QoL → Replace references in selection…* (which pre-fills the search list and scans immediately).
 
-**What it does:** Lists every `Object` reference inside any VRCFury component on the selected hierarchy. Each row shows the current value (read-only) and a *Replace* drop-target. Drag a replacement into any rows you want to change, then click Apply.
+**What it does:** Lists every distinct `Object` referenced by any VRCFury component on the selected hierarchy — **one row per unique referenced object**, with a count of how many places it's used. Drag a replacement onto the rows you want to swap and click Apply.
 
-How it walks: for each VRCFury component on the search roots and their descendants, the tool builds a `SerializedObject` and iterates with `SerializedProperty.NextVisible(true)` — this descends into `[SerializeReference]` polymorphic graphs (Toggle, ArmatureLink, FullController, etc.) automatically. Every `ObjectReference` property with a non-null value is recorded along with its property path and the type of the enclosing `[SerializeReference]` parent (e.g. *ArmatureLink*, *Toggle*).
+How it walks: for each VRCFury component on the search roots, the tool builds a `SerializedObject` and iterates with `SerializedProperty.NextVisible(true)` — this descends into `[SerializeReference]` polymorphic graphs (Toggle, ArmatureLink, FullController, etc.) automatically. Every `ObjectReference` property with a non-null value is recorded; rows are then grouped by the underlying object so duplicates collapse into a single row.
+
+Per-selection control:
+- Each entry in the search list has a **children** toggle. On (default) the scan recurses into the GameObject's descendants; off, the scan only checks components on that exact GameObject. Useful when two avatars share a parent or when you want to limit the scan to one component.
 
 You can:
 - Drop a replacement into any row's *Replace* field. Rows without a replacement are left alone.
-- Click *All like this* on a row to copy that replacement onto every other row whose current value matches — for the common "rename a bone, swap it everywhere" workflow.
+- Expand the *Locations* foldout on a multi-reference row to see exactly where it's used (each entry has a *Ping* button).
 - *Only queued* filters the list to just the rows you've staged.
-- *Ping* a row to highlight the underlying VRCFury component in the hierarchy.
 - *Refresh* re-runs the scan (the references you applied should now show their new values).
 
-Apply is grouped into one Undo step. If a row's current value drifted between scan and apply (e.g. another tool changed it in the meantime), that row is skipped and logged as "stale"; the rest still apply.
+Apply is grouped into one Undo step. If a site's current value drifted between scan and apply (e.g. another tool changed it in the meantime), that site is skipped and logged as "stale"; the rest still apply.
 
 > _Screenshot: TODO_
 
