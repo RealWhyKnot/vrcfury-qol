@@ -36,6 +36,18 @@ Apply is grouped into one Undo step. If a site's current value drifted between s
 
 > _Screenshot: TODO_
 
+## Missing Reference Warning
+
+**Where:** Auto-pops on editor startup, scene-open, and prefab-stage-open. Manual re-check via *Tools → VRCFury QoL → Check for missing references…*.
+
+**What it does:** Walks every VRCFury component in the open scene(s) and prefab stage looking for `Object` reference properties whose serialized instance ID is non-zero but whose runtime value resolved to `null` — the telltale of a deleted asset or scene object that the VRCFury data still expects to find. If anything matches, a non-modal window opens listing every offender with its GameObject path, feature type, property path, and a Ping button.
+
+**Dismiss semantics:** Closing the auto-popped window sets a session-scoped dismiss flag — the warning won't pop again until the next assembly reload (script recompile, *Reload Domain*, or restart). Reload-scoped (rather than persistent) is intentional: missing refs are usually transient (notice → fix → recompile re-arms the scanner). A persistent "don't ask again" preference would let real problems linger silently.
+
+If you want to verify the situation between reloads, the manual menu entry always opens the window — even if the scan is clean it'll tell you so.
+
+> _Screenshot: TODO_
+
 ## Auto Global Parameter
 
 **Where:** Always-on background sync; visible as a colored banner at the top of every VRCFury Toggle inspector. Right-click anywhere on a Toggle for the manual control menu.
