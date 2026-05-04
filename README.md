@@ -22,25 +22,21 @@ Detailed walkthroughs of every tool live in the [Tools Overview](https://github.
 
 ## Installation
 
-Drop the `Editor/` folder into your Unity project under any path that ends in (or contains) `Editor/`. Unity compiles it as an editor-only assembly automatically.
+### VCC (recommended)
 
-```
-Assets/
-  YourFolder/
-    Editor/
-      VrcfQol.cs
-      VrcfQolInspectorOverlay.cs
-      VrcfQolHotReload.cs
-      Tools/
-        AutoGlobalParameterTool.cs
-        DuplicateFlipbookPageTool.cs
-        MigrateIntoFlipbookTool.cs
-        MoveVrcfComponentsTool.cs
-        ReplaceReferencesTool.cs
-        ReplaceReferencesWindow.cs
-```
+Add the WhyKnot VPM listing to the [VRChat Creator Companion](https://creators.vrchat.com/), then this package shows up under **Manage Project → Add Package**.
 
-No asmdef, no dependencies beyond VRCFury itself. Tested against VRCFury **1.1303.x** on Unity **2022.3**.
+1. Click [this `vcc://` link](vcc://vpm/addRepo?url=https://vpm.whyknot.dev/index.json) — VCC opens and pre-fills the listing URL.
+2. Or, in VCC: **Settings → Packages → Add Repository**, paste `https://vpm.whyknot.dev/index.json`, click **I Understand, Add Repository**.
+3. Open any project, click **Manage Project**, find **VRCFury QoL** in the package list, hit **Add**.
+
+Unity compiles the package into a dedicated `dev.whyknot.vrcfury-qol.Editor` assembly (`Editor/` only — nothing leaks into runtime builds). Hard-depends on `com.vrcfury.vrcfury` (≥ 1.1300.0); VCC will refuse to install without VRCFury present.
+
+### Manual install
+
+For Unity projects not managed by VCC: download `dev.whyknot.vrcfury-qol-X.Y.Z.zip` from [the latest release](https://github.com/RealWhyKnot/vrcfury-qol/releases/latest), unzip into `Packages/dev.whyknot.vrcfury-qol/` (so `Packages/dev.whyknot.vrcfury-qol/package.json` exists), and Unity's Package Manager picks it up on next refresh. VRCFury must already be installed in the project.
+
+Tested against VRCFury **1.1303.x** on Unity **2022.3**.
 
 For per-clone setup steps (hot-reload bootstrap, etc.) see the [Installation](https://github.com/RealWhyKnot/vrcfury-qol/wiki/Installation) wiki page.
 
