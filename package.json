@@ -1,0 +1,24 @@
+{
+  "name": "dev.whyknot.vrcfury-qol",
+  "displayName": "VRCFury QoL",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "description": "Quality-of-life Editor tools for VRCFury. Right-click and inline-button affordances for things you'd otherwise dig through nested inspectors for: move/merge VRCFury components between GameObjects, replace references across a selection, auto-sync Global Parameter on Toggles, migrate child toggles into a Flipbook, missing-reference warnings on startup, hot reload + compile-error log.",
+  "author": {
+    "name": "WhyKnot",
+    "url": "https://whyknot.dev"
+  },
+  "license": "MIT",
+  "url": "https://github.com/RealWhyKnot/vrcfury-qol/releases/download/v1.0.0/dev.whyknot.vrcfury-qol-1.0.0.zip",
+  "documentationUrl": "https://github.com/RealWhyKnot/vrcfury-qol",
+  "changelogUrl": "https://github.com/RealWhyKnot/vrcfury-qol/blob/main/CHANGELOG.md",
+  "vpmDependencies": {
+    "com.vrcfury.vrcfury": ">=1.1300.0"
+  },
+  "keywords": [
+    "vrchat",
+    "vrcfury",
+    "editor-tools",
+    "avatar"
+  ]
+}
