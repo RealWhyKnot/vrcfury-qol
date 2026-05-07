@@ -9,7 +9,8 @@ All notable changes to this project will be documented in this file. Format foll
 
 ## Unreleased
 
-_No notable changes since the last release._
+### Changed
+- Bump actions/checkout from 4 to 6 (#1) (16c696c)
 
 ---
 
