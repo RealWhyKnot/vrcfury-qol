@@ -7,7 +7,7 @@
 ## Checklist
 
 - [ ] Compiles in Unity 2022.3.x with no console errors or warnings introduced by this change.
-- [ ] Tested in the editor against a VRCFury-equipped avatar — including Undo (Ctrl+Z) for any destructive operation.
+- [ ] Tested in the editor against a VRCFury-equipped avatar -- including Undo (Ctrl+Z) for any destructive operation.
 - [ ] If a tool was added or its UX changed, the corresponding section in [`wiki/Tools-Overview.md`](../wiki/Tools-Overview.md) was updated.
 - [ ] If reflection-cache fields were added/changed, optional fields are null-checked at every call site.
 - [ ] No `Debug.Log` debug noise left in production code paths.

@@ -1,7 +1,7 @@
 name: CI
 
 # Light CI for a Unity-package-source repo. We don't run Unity itself here
-# (heavy, requires a license, slow) — that's tracked as a follow-up issue.
+# (heavy, requires a license, slow) -- that's tracked as a follow-up issue.
 # What we DO check: workflow YAML is valid (actionlint) and Markdown is lintable.
 
 on:

@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before filing, skim the [Troubleshooting wiki page](https://github.com/RealWhyKnot/vrcfury-qol/wiki/Troubleshooting) — common failure modes are documented there.
+        Before filing, skim the [Troubleshooting wiki page](https://github.com/RealWhyKnot/vrcfury-qol/wiki/Troubleshooting) -- common failure modes are documented there.
 
   - type: textarea
     id: what-happened
@@ -71,11 +71,11 @@ body:
     attributes:
       label: Unity console output
       description: |
-        Copy any errors/exceptions from the Unity console. The hot-reload tool also writes a log at `<ProjectRoot>/Logs/VrcfQolHotReload.log` — paste relevant lines.
+        Copy any errors/exceptions from the Unity console. The hot-reload tool also writes a log at `<ProjectRoot>/Logs/VrcfQolHotReload.log` -- paste relevant lines.
       render: text
 
   - type: textarea
     id: extra-context
     attributes:
       label: Anything else?
-      description: Screenshots, scene/prefab snippets, hardware notes — anything that helps reproduce.
+      description: Screenshots, scene/prefab snippets, hardware notes -- anything that helps reproduce.

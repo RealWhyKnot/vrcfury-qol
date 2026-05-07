@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common failure modes and what to check first. If your problem isn't here, file a [bug report](https://github.com/RealWhyKnot/vrcfury-qol/issues/new?template=bug_report.yml) — include the Unity version, VRCFury version, and the affected tool.
+Common failure modes and what to check first. If your problem isn't here, file a [bug report](https://github.com/RealWhyKnot/vrcfury-qol/issues/new?template=bug_report.yml) -- include the Unity version, VRCFury version, and the affected tool.
 
 ## "VRCFury runtime assembly ('VRCFury') not found."
 
@@ -25,7 +25,7 @@ The framework hooks `EditorApplication.contextualPropertyMenu`, which runs when 
 - **Has the framework loaded?** Tools register in their static constructor (`[InitializeOnLoad]`). Focus Unity once after install so it compiles and runs the constructors. Look for any `[VRCF QoL]` log lines on startup as a sanity check.
 - **A tool's `match()` may be returning false.** If you're trying to invoke a specific action (e.g. *Migrate child toggles as pages*), the trigger has to be on the corresponding type. The Migrate tool's match expects a `[SerializeReference]` of `VF.Model.StateAction.FlipBookBuilderAction`; right-clicking the page rows below it won't match.
 
-## Inline buttons (e.g. *Duplicate → End*) don't appear
+## Inline buttons (e.g. *Duplicate -> End*) don't appear
 
 The buttons are injected by `VrcfQolInspectorOverlay.cs`, which scans inspector windows every ~250 ms looking for labels matching `^Page #\d+$`. If buttons don't show up:
 
@@ -37,14 +37,14 @@ The buttons are injected by `VrcfQolInspectorOverlay.cs`, which scans inspector 
 The green banner at the top of every Toggle inspector confirms auto-sync is active. If it's absent:
 
 - Check the inspector overlay didn't fail silently. Console logs from the inspector overlay's try/catch may surface there.
-- The Toggle has a name set, right? The sync skips toggles with empty/whitespace names — there's nothing useful to set `globalParam` to. Once you name the toggle, the next 0.5 s tick syncs it and the banner appears.
+- The Toggle has a name set, right? The sync skips toggles with empty/whitespace names -- there's nothing useful to set `globalParam` to. Once you name the toggle, the next 0.5 s tick syncs it and the banner appears.
 - The component might be in a closed prefab stage. The sync only operates on the open scene + open prefab stage.
 
 ## Replace-References lists nothing
 
 - **No VRCFury components in the selection.** The window walks every selected GameObject *and its children* for VRCFury components. If none are found, nothing to list. Try selecting the avatar root.
-- **All references are null.** The scan skips properties whose current value is `null` — there's nothing to replace. If a reference is supposed to be set, fix that in the VRCFury inspector first.
-- **The reference is a string path, not an Object reference.** This tool only handles `ObjectReference` properties. Some VRCFury fields store paths as strings (e.g. animation curve target paths) — those aren't covered.
+- **All references are null.** The scan skips properties whose current value is `null` -- there's nothing to replace. If a reference is supposed to be set, fix that in the VRCFury inspector first.
+- **The reference is a string path, not an Object reference.** This tool only handles `ObjectReference` properties. Some VRCFury fields store paths as strings (e.g. animation curve target paths) -- those aren't covered.
 
 ## Replace-References "skipped N stale entries"
 
@@ -56,7 +56,7 @@ The stale row is skipped to avoid blindly overwriting a value the user didn't se
 
 ## Move tool: "Merge into one component" is greyed out
 
-The installed VRCFury version doesn't expose the legacy `VRCFuryConfig.features` list (or the lookup failed). Use **Move whole components** instead — same end result for most workflows, just preserves the original component count.
+The installed VRCFury version doesn't expose the legacy `VRCFuryConfig.features` list (or the lookup failed). Use **Move whole components** instead -- same end result for most workflows, just preserves the original component count.
 
 If you need merge behaviour and the field has been renamed, please [file a `vrcfury: compat` issue](https://github.com/RealWhyKnot/vrcfury-qol/issues) with the version you're on.
 
@@ -65,7 +65,7 @@ If you need merge behaviour and the field has been renamed, please [file a `vrcf
 `<ProjectRoot>/Logs/VrcfQolHotReload.log` is written by `VrcfQolHotReload.cs`. If the file isn't there or isn't growing on script saves:
 
 - **First-time install.** Focus Unity once so it compiles `VrcfQolHotReload.cs` itself; from then on the watcher runs.
-- **`FileSystemWatcher` failed to start.** This shows up as an exception in the Unity console at editor startup. Causes: anti-virus, sandboxing, or unusual filesystem types. The tool degrades gracefully — Unity's built-in focus-based refresh still works, the log just doesn't get written.
+- **`FileSystemWatcher` failed to start.** This shows up as an exception in the Unity console at editor startup. Causes: anti-virus, sandboxing, or unusual filesystem types. The tool degrades gracefully -- Unity's built-in focus-based refresh still works, the log just doesn't get written.
 
 ## Undo doesn't revert everything
 

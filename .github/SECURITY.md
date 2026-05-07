@@ -23,4 +23,4 @@ In scope:
 Out of scope (won't be treated as security issues):
 - Bugs that require an attacker to already have write access to your project files.
 - Bugs in upstream dependencies (Unity, VRCFury). Report those upstream.
-- "The tool did the wrong thing" — file a normal issue.
+- "The tool did the wrong thing" -- file a normal issue.

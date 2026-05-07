@@ -13,7 +13,7 @@ body:
     attributes:
       label: What problem would this solve?
       description: Is your feature request related to a problem? Describe the avatar workflow you're stuck on.
-      placeholder: e.g. "When refactoring my avatar I need to … and there's no fast way to do it without …"
+      placeholder: e.g. "When refactoring my avatar I need to ... and there's no fast way to do it without ..."
     validations:
       required: true
 
@@ -35,4 +35,4 @@ body:
     id: extra-context
     attributes:
       label: Additional context
-      description: Screenshots, links to similar features in other tools, references — anything that helps.
+      description: Screenshots, links to similar features in other tools, references -- anything that helps.
