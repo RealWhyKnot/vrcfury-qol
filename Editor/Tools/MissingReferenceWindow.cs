@@ -3,7 +3,7 @@
 // Non-modal window listing missing Object references found by
 // MissingReferenceWarningTool. Pops automatically on startup / scene-open
 // when there's anything to report; can also be opened manually from
-// Tools/VRCFury QoL/Check for missing references...
+// Tools/WhyKnot/vrcfury-qol/Check for missing references...
 //
 // Closing the window in auto-show mode marks the session as dismissed so
 // the warning won't pop again until the next assembly reload. Manually
@@ -29,7 +29,7 @@ namespace UmeVrcfQol.Tools {
 
         internal static void OpenAuto(List<MissingReferenceWarningTool.MissingRef> missing) {
             var w = GetWindow<MissingReferenceWindow>(false, "Missing References", true);
-            w.titleContent = new GUIContent("VRCFury QoL — Missing References");
+            w.titleContent = new GUIContent("WhyKnot - Missing VRCFury References");
             w._missing = missing ?? new List<MissingReferenceWarningTool.MissingRef>();
             w._shouldDismissOnClose = true;
             w._autoShow = true;
@@ -39,7 +39,7 @@ namespace UmeVrcfQol.Tools {
 
         internal static void OpenManual(List<MissingReferenceWarningTool.MissingRef> missing) {
             var w = GetWindow<MissingReferenceWindow>(false, "Missing References", true);
-            w.titleContent = new GUIContent("VRCFury QoL — Missing References");
+            w.titleContent = new GUIContent("WhyKnot - Missing VRCFury References");
             w._missing = missing ?? new List<MissingReferenceWarningTool.MissingRef>();
             w._shouldDismissOnClose = false;
             w._autoShow = false;
@@ -86,8 +86,8 @@ namespace UmeVrcfQol.Tools {
                         $"{_missing.Count} missing reference{(_missing.Count == 1 ? "" : "s")} on VRCFury component(s). " +
                         (_autoShow
                             ? "This warning won't pop again until the next reload (script recompile / restart). " +
-                              "You can re-check anytime from Tools/VRCFury QoL/Check for missing references..."
-                            : "Fix them in the inspector or replace via Tools/VRCFury QoL/Replace References."),
+                              "You can re-check anytime from Tools/WhyKnot/vrcfury-qol/Check for missing references..."
+                            : "Fix them in the Inspector or replace via Tools/WhyKnot/vrcfury-qol/Replace References."),
                         MessageType.Warning);
                 }
             }
@@ -143,7 +143,11 @@ namespace UmeVrcfQol.Tools {
                 }
                 GUILayout.FlexibleSpace();
                 string closeLabel = _shouldDismissOnClose ? "Dismiss" : "Close";
-                if (GUILayout.Button(closeLabel, GUILayout.Height(22), GUILayout.Width(100))) {
+                if (GUILayout.Button(new GUIContent(closeLabel,
+                        _shouldDismissOnClose
+                            ? "Close this warning for the rest of this editor session."
+                            : "Close this window."),
+                        GUILayout.Height(22), GUILayout.Width(100))) {
                     Close();
                 }
             }

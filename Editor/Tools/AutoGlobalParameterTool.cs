@@ -20,7 +20,7 @@
 //   parameter name is already meaningful AND already unique within the menu.
 //
 //   It's NOT forced blindly: each toggle can opt out via:
-//       • Right-click → "VRCF QoL / Disable auto-update of global parameter",
+//       • Right-click → "WhyKnot / vrcfury-qol / Disable global parameter sync",
 //       • or the inline "Disable" button on the green banner at the top of the
 //         Toggle inspector (see VrcfQolInspectorOverlay).
 //
@@ -60,13 +60,13 @@ namespace UmeVrcfQol.Tools {
 
             // Right-click menu items for manual control from the Toggle inspector.
             VrcfQol.RegisterToggleTool(
-                label: "VRCF QoL/Disable auto-update of global parameter",
+                label: "WhyKnot/vrcfury-qol/Disable global parameter sync",
                 action: ctx => SetOptedOut(ctx.vrcfComponent, true),
                 priority: 6,
                 enabled: ctx => !IsOptedOut(ctx.vrcfComponent)
             );
             VrcfQol.RegisterToggleTool(
-                label: "VRCF QoL/Enable auto-update of global parameter",
+                label: "WhyKnot/vrcfury-qol/Enable global parameter sync",
                 action: ctx => {
                     SetOptedOut(ctx.vrcfComponent, false);
                     ApplyTo(ctx.vrcfComponent, force: true);
@@ -75,7 +75,7 @@ namespace UmeVrcfQol.Tools {
                 enabled: ctx => IsOptedOut(ctx.vrcfComponent)
             );
             VrcfQol.RegisterToggleTool(
-                label: "VRCF QoL/Re-sync global parameter now",
+                label: "WhyKnot/vrcfury-qol/Sync global parameter now",
                 action: ctx => ApplyTo(ctx.vrcfComponent, force: true),
                 priority: 5
             );

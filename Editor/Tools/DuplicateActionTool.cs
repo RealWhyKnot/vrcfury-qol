@@ -1,7 +1,7 @@
 // DuplicateActionTool.cs
 //
 // Right-click any State Action inside a VRCFury Toggle (or inside a flipbook
-// page's state) and pick "VRCF QoL/Duplicate this action". The action gets
+// page's state) and pick "WhyKnot/vrcfury-qol/Duplicate this action". The action gets
 // deep-cloned via the same JsonUtility round-trip the page-duplicator uses,
 // then inserted right below itself in the enclosing actions list.
 //
@@ -30,12 +30,22 @@ namespace UmeVrcfQol.Tools {
         private static readonly Regex ActionTailRegex = new Regex(
             @"\.actions\.Array\.data\[(\d+)\]$", RegexOptions.Compiled);
 
+        private static readonly Regex FlipbookPageActionRegex = new Regex(
+            @"\.pages\.Array\.data\[(\d+)\]\.state\.actions\.Array\.data\[(\d+)\]$",
+            RegexOptions.Compiled);
+
         private const BindingFlags AnyInstance =
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
+        internal struct FlipbookActionCopyInfo {
+            public int SourcePageIndex;
+            public int ActionIndex;
+            public int PageCount;
+        }
+
         static DuplicateActionTool() {
             VrcfQol.RegisterPropertyTool(
-                label: "VRCF QoL/Duplicate this action",
+                label: "WhyKnot/vrcfury-qol/Duplicate this action",
                 match: prop => {
                     if (prop == null) return false;
                     if (prop.propertyType != SerializedPropertyType.ManagedReference) return false;
@@ -48,40 +58,113 @@ namespace UmeVrcfQol.Tools {
         }
 
         private static void Run(SerializedProperty prop) {
-            if (!VrcfQol.Reflection.TryEnsure(out var err)) {
-                EditorUtility.DisplayDialog("Duplicate Action", err, "OK");
-                return;
-            }
             var component = prop.serializedObject?.targetObject as Component;
-            if (component == null) {
-                EditorUtility.DisplayDialog("Duplicate Action",
-                    "Could not resolve the parent VRCFury component.", "OK");
-                return;
+            if (!TryDuplicate(component, prop.propertyPath, out var error)) {
+                EditorUtility.DisplayDialog("Duplicate Action", error, "OK");
             }
-            if (!TryResolveActionList(component, prop.propertyPath, out var list, out var index)) {
-                EditorUtility.DisplayDialog("Duplicate Action",
-                    "Could not resolve the actions list. The VRCFury layout may have changed.", "OK");
-                return;
+        }
+
+        internal static bool TryDuplicate(Component component, string propertyPath, out string error) {
+            error = null;
+            if (!VrcfQol.Reflection.TryEnsure(out var err)) {
+                error = err;
+                return false;
+            }
+            if (component == null) {
+                error = "Could not resolve the parent VRCFury component.";
+                return false;
+            }
+            if (!TryResolveActionList(component, propertyPath, out var list, out var index)) {
+                error = "Could not resolve the actions list. The VRCFury layout may have changed.";
+                return false;
             }
             var src = list[index];
             if (src == null) {
-                EditorUtility.DisplayDialog("Duplicate Action",
-                    "The selected action is null and can't be duplicated.", "OK");
-                return;
+                error = "The selected action is null and can't be duplicated.";
+                return false;
             }
 
             try {
                 Undo.RegisterCompleteObjectUndo(component, "Duplicate VRCFury action");
-                var json = JsonUtility.ToJson(src);
-                var clone = JsonUtility.FromJson(json, src.GetType());
+                var clone = CloneAction(src);
                 list.Insert(index + 1, clone);
                 EditorUtility.SetDirty(component);
                 Debug.Log($"[VRCF QoL] Duplicated action #{index + 1} ({src.GetType().Name}) " +
                           $"in place (now at #{index + 2}).");
+                return true;
             } catch (Exception ex) {
                 Debug.LogException(ex);
-                EditorUtility.DisplayDialog("Duplicate Action",
-                    "Duplication failed. See Console.\n\n" + ex.Message, "OK");
+                error = "Duplication failed. See Console.\n\n" + ex.Message;
+                return false;
+            }
+        }
+
+        internal static bool TryGetFlipbookActionCopyInfo(
+            Component component,
+            string propertyPath,
+            out FlipbookActionCopyInfo info,
+            out string error) {
+            info = default;
+            if (!VrcfQol.Reflection.TryEnsure(out var err)) {
+                error = err;
+                return false;
+            }
+            if (!TryResolveFlipbookAction(component, propertyPath,
+                    out _, out var actionIndex, out var pages, out var sourcePageIndex, out error)) {
+                return false;
+            }
+
+            info = new FlipbookActionCopyInfo {
+                SourcePageIndex = sourcePageIndex,
+                ActionIndex = actionIndex,
+                PageCount = pages.Count,
+            };
+            return true;
+        }
+
+        internal static bool TryDuplicateToFlipbookPage(
+            Component component,
+            string propertyPath,
+            int targetPageIndex,
+            out string error) {
+            error = null;
+            if (!VrcfQol.Reflection.TryEnsure(out var err)) {
+                error = err;
+                return false;
+            }
+            if (!TryResolveFlipbookAction(component, propertyPath,
+                    out var sourceActions, out var actionIndex, out var pages, out var sourcePageIndex, out error)) {
+                return false;
+            }
+            if (targetPageIndex < 0 || targetPageIndex >= pages.Count) {
+                error = $"Page #{targetPageIndex + 1} was not found.";
+                return false;
+            }
+
+            var src = sourceActions[actionIndex];
+            if (src == null) {
+                error = "The selected action is null and can't be duplicated.";
+                return false;
+            }
+
+            try {
+                var targetActions = EnsureActionListOnPage(pages[targetPageIndex]);
+                if (targetActions == null) {
+                    error = $"Could not resolve the action list on page #{targetPageIndex + 1}.";
+                    return false;
+                }
+
+                Undo.RegisterCompleteObjectUndo(component, "Duplicate VRCFury action to flipbook page");
+                var clone = CloneAction(src);
+                targetActions.Add(clone);
+                EditorUtility.SetDirty(component);
+                Debug.Log($"[VRCF QoL] Duplicated action #{actionIndex + 1} ({src.GetType().Name}) " +
+                          $"from page #{sourcePageIndex + 1} to page #{targetPageIndex + 1}.");
+                return true;
+            } catch (Exception ex) {
+                Debug.LogException(ex);
+                error = "Duplication failed. See Console.\n\n" + ex.Message;
+                return false;
             }
         }
 
@@ -113,6 +196,76 @@ namespace UmeVrcfQol.Tools {
                 list = null; index = -1; return false;
             }
             return true;
+        }
+
+        private static bool TryResolveFlipbookAction(
+            Component component,
+            string propertyPath,
+            out IList sourceActions,
+            out int actionIndex,
+            out IList pages,
+            out int sourcePageIndex,
+            out string error) {
+            sourceActions = null;
+            actionIndex = -1;
+            pages = null;
+            sourcePageIndex = -1;
+            error = null;
+
+            if (component == null) {
+                error = "Could not resolve the parent VRCFury component.";
+                return false;
+            }
+            if (string.IsNullOrEmpty(propertyPath)) {
+                error = "Could not resolve this action row.";
+                return false;
+            }
+
+            var pageMatch = FlipbookPageActionRegex.Match(propertyPath);
+            if (!pageMatch.Success ||
+                !int.TryParse(pageMatch.Groups[1].Value, out sourcePageIndex) ||
+                !int.TryParse(pageMatch.Groups[2].Value, out actionIndex)) {
+                error = "This action is not inside a flipbook page.";
+                return false;
+            }
+
+            if (!TryResolveActionList(component, propertyPath, out sourceActions, out actionIndex)) {
+                error = "Could not resolve the source action list. The VRCFury layout may have changed.";
+                return false;
+            }
+
+            var flipbookPath = propertyPath.Substring(0, pageMatch.Index);
+            var pagesPath = (flipbookPath + ".pages").TrimStart('.');
+            pages = Walk(component, pagesPath) as IList;
+            if (pages == null || sourcePageIndex < 0 || sourcePageIndex >= pages.Count) {
+                pages = null;
+                error = "Could not resolve the flipbook pages list. The VRCFury layout may have changed.";
+                return false;
+            }
+
+            return true;
+        }
+
+        private static IList EnsureActionListOnPage(object page) {
+            if (page == null || !VrcfQol.Reflection.TryEnsure(out _)) return null;
+            var r = VrcfQol.Reflection;
+            var state = r.PageStateField.GetValue(page);
+            if (state == null) {
+                state = Activator.CreateInstance(r.StateType);
+                r.PageStateField.SetValue(page, state);
+            }
+
+            var actions = r.StateActionsField.GetValue(state) as IList;
+            if (actions == null) {
+                actions = (IList)Activator.CreateInstance(r.StateActionsField.FieldType);
+                r.StateActionsField.SetValue(state, actions);
+            }
+            return actions;
+        }
+
+        private static object CloneAction(object src) {
+            var json = JsonUtility.ToJson(src);
+            return JsonUtility.FromJson(json, src.GetType());
         }
 
         // Walk a SerializedProperty-style path against a runtime object graph

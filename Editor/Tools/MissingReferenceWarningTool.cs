@@ -11,7 +11,7 @@
 // the window (or closing it for any reason) sets a session-scoped flag that
 // suppresses further auto-pops until the next assembly reload — script
 // recompile, Reload Domain, or restart. Users who want to re-check anyway
-// can use Tools/VRCFury QoL/Check for missing references...
+// can use Tools/WhyKnot/vrcfury-qol/Check for missing references...
 //
 // Why session-scoped (not per-project preference): missing refs are usually
 // transient — the user notices, fixes the problem, and a recompile re-arms
@@ -29,7 +29,7 @@ namespace UmeVrcfQol.Tools {
     [InitializeOnLoad]
     internal static class MissingReferenceWarningTool {
 
-        private const string MenuPath = "Tools/VRCFury QoL/Check for missing references...";
+        private const string MenuPath = "Tools/WhyKnot/vrcfury-qol/Check for missing references...";
 
         // Suppresses auto-show for the rest of the session. Cleared by
         // assembly reload because static state doesn't survive that.

@@ -5,13 +5,13 @@
 //
 // Inline buttons (rendered next to every "Page #N" label by the inspector
 // overlay):
-//   • Dup ↓     — duplicate this page right below itself
-//   • Insert ↓  — insert a new empty page right below this one
+//   • Duplicate     — duplicate this page right below itself
+//   • Insert blank  — insert a new empty page right below this one
 //
 // Right-click menu (on a Flipbook page row):
-//   • VRCF QoL/Duplicate page below       (priority 25)
-//   • VRCF QoL/Insert empty page below    (priority 24)
-//   • VRCF QoL/Duplicate page to end      (priority 20, original)
+//   • WhyKnot/vrcfury-qol/Duplicate page below       (priority 25)
+//   • WhyKnot/vrcfury-qol/Insert empty page below    (priority 24)
+//   • WhyKnot/vrcfury-qol/Duplicate page to end      (priority 20, original)
 //
 // "Below" semantics: the new page goes at index + 1 in the same flipbook.
 // Existing pages from index + 1 onward shift down.
@@ -27,30 +27,30 @@ namespace UmeVrcfQol.Tools {
 
         static DuplicateFlipbookPageTool() {
             VrcfQol.RegisterFlipbookPageTool(
-                label: "VRCF QoL/Duplicate page below",
+                label: "WhyKnot/vrcfury-qol/Duplicate page below",
                 action: DuplicateBelow,
                 priority: 25
             );
             VrcfQol.RegisterFlipbookPageTool(
-                label: "VRCF QoL/Insert empty page below",
+                label: "WhyKnot/vrcfury-qol/Insert empty page below",
                 action: InsertEmptyBelow,
                 priority: 24
             );
             VrcfQol.RegisterFlipbookPageTool(
-                label: "VRCF QoL/Duplicate page to end",
+                label: "WhyKnot/vrcfury-qol/Duplicate page to end",
                 action: DuplicateToEnd,
                 priority: 20
             );
 
             VrcfQol.RegisterFlipbookPageButton(
-                text: "Dup ↓",
-                tooltip: "VRCF QoL: clone this page and insert the copy right below it.",
+                text: "Duplicate",
+                tooltip: "Clone this flipbook page and insert the copy directly below it.",
                 onClick: DuplicateBelow,
                 order: 0
             );
             VrcfQol.RegisterFlipbookPageButton(
-                text: "Insert ↓",
-                tooltip: "VRCF QoL: insert a new, empty page right below this one.",
+                text: "Insert blank",
+                tooltip: "Insert a new empty flipbook page directly below this one.",
                 onClick: InsertEmptyBelow,
                 order: 1
             );

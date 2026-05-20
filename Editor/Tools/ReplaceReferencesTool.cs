@@ -4,10 +4,10 @@
 // itself lives in ReplaceReferencesWindow.cs.
 //
 // Two ways to open it:
-//   1. Tools/VRCFury QoL/Replace References...     (top-level menu)
-//   2. Right-click a GameObject in the hierarchy → "VRCFury QoL/Replace
-//      references in selection..." (pre-fills the search list with the
-//      currently selected GameObjects)
+//   1. Tools/WhyKnot/vrcfury-qol/Replace References...
+//   2. Right-click a GameObject in the hierarchy →
+//      "WhyKnot/vrcfury-qol/Replace references in selection..."
+//      (pre-fills the search list with the currently selected GameObjects)
 
 using UnityEditor;
 using UnityEngine;
@@ -17,8 +17,8 @@ namespace UmeVrcfQol.Tools {
     [InitializeOnLoad]
     internal static class ReplaceReferencesTool {
 
-        private const string GameObjectMenuPath = "GameObject/VRCFury QoL/Replace references in selection...";
-        private const string ToolsMenuPath      = "Tools/VRCFury QoL/Replace References...";
+        private const string GameObjectMenuPath = "GameObject/WhyKnot/vrcfury-qol/Replace references in selection...";
+        private const string ToolsMenuPath      = "Tools/WhyKnot/vrcfury-qol/Replace References...";
 
         static ReplaceReferencesTool() {
             // Registration is implicit — both menu items below are static, so

@@ -6,7 +6,7 @@
 // deleted afterward.
 //
 // Right-click anywhere on a Flipbook Builder action (the dark-grey header row
-// or its body) and choose "VRCF QoL / Migrate child toggles as pages".
+// or its body) and choose "WhyKnot / vrcfury-qol / Migrate child toggles as pages".
 
 using System;
 using System.Collections;
@@ -22,7 +22,7 @@ namespace UmeVrcfQol.Tools {
     internal static class MigrateIntoFlipbookTool {
         static MigrateIntoFlipbookTool() {
             VrcfQol.RegisterPropertyTool(
-                label: "VRCF QoL/Migrate child toggles as pages",
+                label: "WhyKnot/vrcfury-qol/Migrate child toggles as pages",
                 match: IsFlipbookBuilderAction,
                 action: Run,
                 priority: 10

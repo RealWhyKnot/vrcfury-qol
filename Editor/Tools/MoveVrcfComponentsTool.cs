@@ -20,10 +20,10 @@
 //       components".
 //
 // Entry points:
-//   • GameObject hierarchy right-click  → "VRCFury QoL/Move all VRCFury
+//   • GameObject hierarchy right-click  → "WhyKnot/vrcfury-qol/Move all VRCFury
 //     components to..." (most ergonomic; the user is already in the hierarchy
 //     to pick a destination next).
-//   • Top-level menu                    → "GameObject/VRCFury QoL/Move all
+//   • Top-level menu                    → "GameObject/WhyKnot/vrcfury-qol/Move all
 //     VRCFury components to..." (mirrors the right-click).
 //
 // Both entry points open a small modal-ish EditorWindow where the user picks a
@@ -40,7 +40,7 @@ namespace UmeVrcfQol.Tools {
 
     internal static class MoveVrcfComponentsTool {
 
-        private const string GameObjectMenuPath = "GameObject/VRCFury QoL/Move all VRCFury components to...";
+        private const string GameObjectMenuPath = "GameObject/WhyKnot/vrcfury-qol/Move all VRCFury components to...";
 
         // Hierarchy right-click + GameObject menu. Priority 49 puts it just above
         // Unity's default "Center On Children" group (50).
@@ -222,24 +222,30 @@ namespace UmeVrcfQol.Tools {
             w.titleContent = new GUIContent("Move VRCFury Components");
             // Position near the cursor so it feels like a contextual dialog.
             var p = GUIUtility.GUIToScreenPoint(Event.current?.mousePosition ?? Vector2.zero);
-            w.position = new Rect(p.x + 10, p.y + 10, 360, 180);
-            w.minSize = new Vector2(360, 180);
-            w.maxSize = new Vector2(640, 280);
+            w.position = new Rect(p.x + 10, p.y + 10, 420, 230);
+            w.minSize = new Vector2(420, 230);
+            w.maxSize = new Vector2(680, 340);
             w.ShowUtility();
         }
 
         private void OnGUI() {
             if (_source == null) {
                 EditorGUILayout.HelpBox("Source GameObject was deleted. Close this window.", MessageType.Error);
-                if (GUILayout.Button("Close")) Close();
+                if (GUILayout.Button(new GUIContent("Close", "Close this window."))) Close();
                 return;
             }
 
-            EditorGUILayout.LabelField("Source", VrcfQol.GetGameObjectPath(_source));
+            EditorGUILayout.HelpBox(
+                "Move every VRCFury component from the source GameObject to one destination GameObject. The operation is one Undo step.",
+                MessageType.Info);
+
+            EditorGUILayout.LabelField(
+                new GUIContent("Source", "The GameObject currently holding the VRCFury components."),
+                new GUIContent(VrcfQol.GetGameObjectPath(_source)));
 
             using (new EditorGUI.DisabledScope(false)) {
                 _destination = (GameObject)EditorGUILayout.ObjectField(
-                    new GUIContent("Destination", "GameObject that will receive the VRCFury components."),
+                    new GUIContent("Destination", "Drop the GameObject that should receive the VRCFury components."),
                     _destination, typeof(GameObject), allowSceneObjects: true);
             }
 
@@ -254,7 +260,7 @@ namespace UmeVrcfQol.Tools {
             bool newWhole = EditorGUILayout.ToggleLeft(
                 new GUIContent(
                     "Move whole components",
-                    "Each VRCFury MonoBehaviour is recreated on the destination as its own component. Preserves shape exactly."),
+                    "Recommended. Each VRCFury component is recreated on the destination as its own component, preserving the original shape exactly."),
                 whole);
             if (newWhole && !whole) _mode = MoveVrcfComponentsTool.Mode.WholeComponents;
 
@@ -263,7 +269,7 @@ namespace UmeVrcfQol.Tools {
                 bool newMerge = EditorGUILayout.ToggleLeft(
                     new GUIContent(
                         "Merge into one component" + (mergeAvailable ? "" : "  (unsupported on this VRCFury version)"),
-                        "Append all source features into a single VRCFury component on the destination using the legacy config.features list."),
+                        "Advanced. Append all source features into a single VRCFury component on the destination using the legacy config.features list."),
                     merge);
                 if (newMerge && !merge && mergeAvailable) _mode = MoveVrcfComponentsTool.Mode.MergeIntoOne;
             }
@@ -280,11 +286,12 @@ namespace UmeVrcfQol.Tools {
 
             using (new EditorGUILayout.HorizontalScope()) {
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Cancel", GUILayout.Width(80))) {
+                if (GUILayout.Button(new GUIContent("Cancel", "Close without moving anything."), GUILayout.Width(80))) {
                     Close();
                 }
                 using (new EditorGUI.DisabledScope(disabledReason != null)) {
-                    if (GUILayout.Button("Move", GUILayout.Width(120))) {
+                    if (GUILayout.Button(new GUIContent("Move components", "Move the source VRCFury components to the destination."),
+                            GUILayout.Width(140))) {
                         DoMove();
                     }
                 }

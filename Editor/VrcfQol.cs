@@ -236,8 +236,11 @@ namespace UmeVrcfQol {
         internal sealed class InlineButtonSpec {
             public string Text;
             public string Tooltip;
+            public Func<FlipbookContext, string> TextProvider;
+            public Func<FlipbookContext, string> TooltipProvider;
             public Action<FlipbookContext> OnClick;
             public Func<FlipbookContext, bool> Visible;
+            public Func<FlipbookContext, bool> Danger;
             public int Order;
         }
 
@@ -250,12 +253,15 @@ namespace UmeVrcfQol {
             string tooltip,
             Action<FlipbookContext> onClick,
             int order = 0,
-            Func<FlipbookContext, bool> visible = null) {
+            Func<FlipbookContext, bool> visible = null,
+            Func<FlipbookContext, string> textProvider = null,
+            Func<FlipbookContext, string> tooltipProvider = null,
+            Func<FlipbookContext, bool> danger = null) {
             if (string.IsNullOrEmpty(text)) throw new ArgumentException("text is required");
             if (onClick == null) throw new ArgumentNullException(nameof(onClick));
             _inlinePageButtons.Add(new InlineButtonSpec {
-                Text = text, Tooltip = tooltip, OnClick = onClick,
-                Visible = visible, Order = order,
+                Text = text, Tooltip = tooltip, TextProvider = textProvider, TooltipProvider = tooltipProvider,
+                OnClick = onClick, Visible = visible, Danger = danger, Order = order,
             });
             _inlinePageButtons.Sort((a, b) => a.Order.CompareTo(b.Order));
         }
