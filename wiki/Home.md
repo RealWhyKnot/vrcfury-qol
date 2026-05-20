@@ -27,7 +27,7 @@ The full picture is on [[Architecture]].
 - Replace object references in bulk across the selected hierarchy
 - Auto-sync `useGlobalParam` / `globalParam` on every Toggle (with per-toggle opt-out)
 - Migrate child VRCFury Toggles into a parent Flipbook
-- Duplicate a flipbook page to the end (right-click or inline button)
+- Duplicate flipbook pages in place (inline button) or to the end (right-click)
 - Hot-reload watcher + per-assembly compile log
 
 See [[Tools-Overview]] for screenshots and details.

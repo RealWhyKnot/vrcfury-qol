@@ -4,7 +4,7 @@ Every shipping tool, where to find it, and what it does. All tools wrap destruct
 
 ## Move VRCFury Components
 
-**Where:** Right-click a GameObject in the hierarchy -> *VRCFury QoL -> Move all VRCFury components to...*. Also available under *GameObject -> VRCFury QoL -> Move all VRCFury components to...* in the menu bar.
+**Where:** Right-click a GameObject in the hierarchy -> *WhyKnot -> vrcfury-qol -> Move all VRCFury components to...*. Also available under *GameObject -> WhyKnot -> vrcfury-qol -> Move all VRCFury components to...* in the menu bar.
 
 **What it does:** Moves every VRCFury MonoBehaviour from a source GameObject to a destination GameObject in one Undo step. Two modes:
 
@@ -17,14 +17,14 @@ The dialog enforces same-scene-as-source and disables itself on identical source
 
 ## Replace References
 
-**Where:** *Tools -> VRCFury QoL -> Replace References...*, or right-click a hierarchy selection -> *VRCFury QoL -> Replace references in selection...* (which pre-fills the search list and scans immediately).
+**Where:** *Tools -> WhyKnot -> vrcfury-qol -> Replace References...*, or right-click a hierarchy selection -> *WhyKnot -> vrcfury-qol -> Replace references in selection...* (which pre-fills the search list and scans immediately).
 
 **What it does:** Lists every distinct `Object` referenced by any VRCFury component on the selected hierarchy -- **one row per unique referenced object**, with a count of how many places it's used. Drag a replacement onto the rows you want to swap and click Apply.
 
 How it walks: for each VRCFury component on the search roots, the tool builds a `SerializedObject` and iterates with `SerializedProperty.NextVisible(true)` -- this descends into `[SerializeReference]` polymorphic graphs (Toggle, ArmatureLink, FullController, etc.) automatically. Every `ObjectReference` property with a non-null value is recorded; rows are then grouped by the underlying object so duplicates collapse into a single row.
 
 Per-selection control:
-- Each entry in the search list has a **children** toggle. On (default) the scan recurses into the GameObject's descendants; off, the scan only checks components on that exact GameObject. Useful when two avatars share a parent or when you want to limit the scan to one component.
+- Each entry in the search list has an **Include children** toggle. On (default) the scan recurses into the GameObject's descendants; off, the scan only checks components on that exact GameObject. Useful when two avatars share a parent or when you want to limit the scan to one component.
 
 You can:
 - Drop a replacement into any row's *Replace* field. Rows without a replacement are left alone.
@@ -38,7 +38,7 @@ Apply is grouped into one Undo step. If a site's current value drifted between s
 
 ## Missing Reference Warning
 
-**Where:** Auto-pops on editor startup, scene-open, and prefab-stage-open. Manual re-check via *Tools -> VRCFury QoL -> Check for missing references...*.
+**Where:** Auto-pops on editor startup, scene-open, and prefab-stage-open. Manual re-check via *Tools -> WhyKnot -> vrcfury-qol -> Check for missing references...*.
 
 **What it does:** Walks every VRCFury component in the open scene(s) and prefab stage looking for `Object` reference properties whose serialized instance ID is non-zero but whose runtime value resolved to `null` -- the telltale of a deleted asset or scene object that the VRCFury data still expects to find. If anything matches, a non-modal window opens listing every offender with its GameObject path, feature type, property path, and a Ping button.
 
@@ -57,7 +57,7 @@ If you want to verify the situation between reloads, the manual menu entry alway
 - `Use Global Parameter` = **true**
 - `Global Parameter`     = the toggle's Menu Path
 
-The Toggle inspector shows a green banner confirming auto-sync is active. The banner has an inline **Disable** button to opt out on a per-toggle basis (or right-click -> *VRCF QoL -> Disable auto-update of global parameter*). Opt-outs are stored in `EditorPrefs` keyed by the component's `GlobalObjectId`, so the preference follows the scene/prefab on this machine but doesn't travel cross-machine.
+The Toggle inspector shows a green banner confirming auto-sync is active. The banner has an inline **Turn off** button to opt out on a per-toggle basis (or right-click -> *WhyKnot -> vrcfury-qol -> Disable global parameter sync*). Opt-outs are stored in `EditorPrefs` keyed by the component's `GlobalObjectId`, so the preference follows the scene/prefab on this machine but doesn't travel cross-machine.
 
 **Why bother?** When VRCFury regenerates your avatar it can rename the internal parameter it picked for each toggle. Anything you've pinned to those names -- animator constraints, external OSC clients, VRChat's per-avatar parameter memory -- gets silently wiped. Explicitly setting `Global Parameter = MenuPath` forces VRCFury to keep the same name forever, so customisations survive a rebuild.
 
@@ -65,7 +65,7 @@ The sync deliberately **does not** wrap each tick in Undo (that would flood the 
 
 ## Migrate Child Toggles into Flipbook
 
-**Where:** Right-click a Flipbook Builder action -> *VRCFury QoL -> Migrate child toggles as pages*.
+**Where:** Right-click a Flipbook Builder action -> *WhyKnot -> vrcfury-qol -> Migrate child toggles as pages*.
 
 **What it does:** Scans the Flipbook's GameObject + descendants for non-flipbook VRCFury Toggles. Folds each into the flipbook as a new page (reusing the source's `State` directly -- no clone, so actions stay byte-identical). Source VRCFury components are deleted afterward. A confirmation dialog shows the exact list of toggles that will be migrated and deleted.
 
@@ -76,8 +76,9 @@ Single Undo step reverts everything.
 **Where:** Right-click a `Page #N` row, or use the inline buttons next to every `Page #N` label.
 
 Three positional variants:
-- **Duplicate page below** *(inline `Dup ↓`)* -- deep-clones the page and inserts the copy at index + 1, shifting later pages down.
-- **Insert empty page below** *(inline `Insert ↓`)* -- inserts a fresh empty page at index + 1. Mirrors what VRCFury creates when you press its own "+" button, just positioned where you want it.
+- **Preview** -- creates a temporary avatar copy with that page applied, hides the source avatar in Scene view, and turns into a red **Stop Previewing** button so you can remove the copy when done. It does not move or reframe the Scene camera.
+- **Duplicate page below** *(inline `Duplicate`)* -- deep-clones the page and inserts the copy at index + 1, shifting later pages down.
+- **Insert empty page below** *(inline `Insert blank`)* -- inserts a fresh empty page at index + 1. Mirrors what VRCFury creates when you press its own "+" button, just positioned where you want it.
 - **Duplicate page to end** -- deep-clones the page and appends the copy at the end of the flipbook (the original behaviour, kept on the right-click menu for cases where you want the new page out of the way).
 
 Page deep-clone uses a `JsonUtility.ToJson` / `FromJson` round-trip on every action, so the new page's state is fully independent of the original.
@@ -86,9 +87,19 @@ The inline buttons are best-effort UI injection: if a future VRCFury version cha
 
 ## Duplicate State Action
 
-**Where:** Right-click any state action inside a VRCFury Toggle (or inside a flipbook page's state) -> *VRCFury QoL -> Duplicate this action*.
+**Where:** Click the inline *Duplicate item* button on a state action, or right-click any state action inside a VRCFury Toggle (or inside a flipbook page's state) -> *WhyKnot -> vrcfury-qol -> Duplicate this action*.
 
 **What it does:** Deep-clones a single state action (ObjectToggleAction, BlendShape, MaterialPropertyAction, AnimationClipAction, etc.) and inserts the copy at index + 1 in the same actions list. Works at any nesting depth -- the path resolver walks the SerializedProperty path with reflection and recognises `.actions.Array.data[N]` boundaries, so it handles top-level Toggle actions and flipbook-page actions equally.
+
+When the action lives inside a flipbook page, an inline *Copy to page* button appears next to *Duplicate item*. It opens a page picker and appends a clone of just that one action to the selected page, useful for copying one BlendShape or Material Swap without duplicating the whole page.
+
+## Preview Toggle / Flipbook
+
+**Where:** Click *Preview* in the Toggle banner, click *Preview* next to a flipbook `Page #N`, or right-click a Toggle / Flipbook Builder / page row -> *WhyKnot -> vrcfury-qol -> Preview ...*.
+
+**What it does:** Creates a temporary, non-saveable copy of the avatar in place, applies the selected toggle or flipbook page to that copy, and hides the source avatar in Scene view. It does not move, reframe, or switch the Scene camera. While a preview is active, the inline button changes to a red **Stop Previewing** button. Clicking it destroys the copy and restores visibility/selection if needed. The preview copy is also destroyed before entering play mode, before script reloads, and on editor quit. If you navigate away from the original inspector, *Tools -> WhyKnot -> vrcfury-qol -> Stop previewing* clears the active copy. The original avatar is never mutated.
+
+Supported visual actions include object toggles, blendshapes, material swaps, material properties, animation clips, Poiyomi flipbook frames, UV tile rows, and scale actions. Nonvisual actions are skipped. If a Toggle contains a Flipbook Builder, Preview opens a page picker so you can preview one page at a time.
 
 ## Hot Reload + Compile Log
 

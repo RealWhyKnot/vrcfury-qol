@@ -25,11 +25,11 @@ The framework hooks `EditorApplication.contextualPropertyMenu`, which runs when 
 - **Has the framework loaded?** Tools register in their static constructor (`[InitializeOnLoad]`). Focus Unity once after install so it compiles and runs the constructors. Look for any `[VRCF QoL]` log lines on startup as a sanity check.
 - **A tool's `match()` may be returning false.** If you're trying to invoke a specific action (e.g. *Migrate child toggles as pages*), the trigger has to be on the corresponding type. The Migrate tool's match expects a `[SerializeReference]` of `VF.Model.StateAction.FlipBookBuilderAction`; right-clicking the page rows below it won't match.
 
-## Inline buttons (e.g. *Duplicate -> End*) don't appear
+## Inline buttons (e.g. *Duplicate*) don't appear
 
 The buttons are injected by `VrcfQolInspectorOverlay.cs`, which scans inspector windows every ~250 ms looking for labels matching `^Page #\d+$`. If buttons don't show up:
 
-- **VRCFury restyled the inspector.** This is best-effort UI injection. The right-click menu on a page row still works (`VRCF QoL/Duplicate page to end`).
+- **VRCFury restyled the inspector.** This is best-effort UI injection. The right-click menu on a page row still works (`WhyKnot/vrcfury-qol/Duplicate page to end`).
 - **The page label format changed.** Future VRCFury versions might localise or restyle "Page #N". The overlay can be updated to recognise the new format.
 
 ## Auto Global Parameter banner missing
